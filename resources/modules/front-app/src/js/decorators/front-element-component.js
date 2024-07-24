@@ -278,11 +278,11 @@ function isActive(){
     case 'auth':{
       const roles = element.getSettings('conditional_active_roles') || [];
       const permissions = element.getSettings('conditional_active_permissions') || [];
-      if(! currentUser.hasRoles(roles)){
+      if(! currentUser.hasRoles(roles) && roles.length > 0){
         authCondition = false;
         break;
       }
-      if(! currentUser.hasPermissions(permissions)){
+      if(! currentUser.hasPermissions(permissions) && permissions.length > 0){
         authCondition = false;
         break;
       }
@@ -312,10 +312,10 @@ function isActive(){
     this.props.element.getCurrentModel(),
     true
   );
-  if(active_conditional_other_display === "AND"){
+  /* if(active_conditional_other_display === "AND"){
     return active && authCondition;
-  }
-  return active || authCondition;
+  } */
+  return active && authCondition;
 }
 /**
  * true если выполняются условия
@@ -346,11 +346,11 @@ function isDisabled(){
     case 'auth':{
       const roles = element.getSettings('conditional_disabled_roles') || [];
       const permissions = element.getSettings('conditional_disabled_permissions') || [];
-      if(! currentUser.hasRoles(roles)){
+      if(! currentUser.hasRoles(roles) && roles.length > 0){
         authCondition = false;
         break;
       }
-      if(! currentUser.hasPermissions(permissions)){
+      if(! currentUser.hasPermissions(permissions) && permissions.length > 0){
         authCondition = false;
         break;
       }
@@ -380,10 +380,10 @@ function isDisabled(){
     this.props.element.getCurrentModel(),
     true
   );
-  if(disabled_conditional_other_display === "AND"){
+  /* if(disabled_conditional_other_display === "AND"){
     return disabled && authCondition;
-  }
-  return disabled || authCondition;
+  } */
+  return disabled && authCondition;
 }
 /**
  * Декорирует компонент элемента методами необходимыми на фронте и в редакторе
