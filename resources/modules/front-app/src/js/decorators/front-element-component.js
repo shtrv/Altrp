@@ -286,6 +286,9 @@ function isActive(){
         authCondition = false;
         break;
       }
+      if(currentUser.isGuest()){
+        authCondition = false;
+      }
     }
     break;
   }
@@ -353,6 +356,9 @@ function isDisabled(){
       if(! currentUser.hasPermissions(permissions) && permissions.length > 0){
         authCondition = false;
         break;
+      }
+      if(currentUser.isGuest()){
+        authCondition = false;
       }
     }
     break;
