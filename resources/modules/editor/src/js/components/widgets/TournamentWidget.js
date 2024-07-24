@@ -1,4 +1,4 @@
-import Reacket from "Reacket";
+import Reacket from "reacket";
 import isEditor from "../../../../../front-app/src/js/functions/isEditor";
 import getDataByPath from "../../../../../front-app/src/js/functions/getDataByPath";
 
