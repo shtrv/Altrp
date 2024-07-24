@@ -21,7 +21,7 @@ import isProd from "../helpers/isProd";
 import View from "@ioc:Adonis/Core/View";
 import {CacheManager} from "edge.js/build/src/CacheManager";
 import env from "../helpers/env";
-const crypto = require('crypto');
+//const crypto = require('crypto');
 
 /* function encryptStringAES(input, key) {
   const cipher = crypto.createCipheriv('aes-256-cbc', key);
