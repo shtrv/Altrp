@@ -22,8 +22,8 @@ export default class MediaController {
   async index({ response, request }: HttpContextContract) {
     const params = request.qs();
     const page = parseInt(params.page) || 1;
-    const pageSize = parseInt(params.pageSize) || 20;
-    const searchWord = params.s || '';
+    const pageSize = parseInt(params.pageSize) || 200;
+    const searchWord = params.s ?? '';
     let media;
     const mediaToUpdate = await Media.query().whereNull("guid").select("*");
     await Promise.all(
