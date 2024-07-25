@@ -848,12 +848,12 @@ export default class ModelsController {
       }
 
       await model.delete()
-      await table.delete()
+      //await table.delete()
 
-      await client.schema.dropTable(model.table.name)
+      //await client.schema.dropTable(model.table.name)
     } else {
       await model.delete()
-      await client.schema.dropTable(model.table.name)
+      //await client.schema.dropTable(model.table.name)
     }
 
     return response.json({success: true})
