@@ -187,10 +187,18 @@ export function replaceIfAndRequest(code:string, qs:any, oper: string):string {
         searchable = `'%${qs[arg2]}'`;
         query = ` ${oper} ${arg1} LIKE ${searchable} `;
         break;
+      case 'START_ILIKE':
+        searchable = `'%${qs[arg2]}'`;
+        query = ` ${oper} ${arg1} ILIKE ${searchable} `;
+        break;
       case 'END_LIKE':
         searchable = `'${qs[arg2]}%'`;
         query = ` ${oper} ${arg1} LIKE ${searchable} `;
         break;
+      case 'END_ILIKE':
+        searchable = `'${qs[arg2]}%'`;
+        query = ` ${oper} ${arg1} ILIKE ${searchable} `;
+        break;  
       default:
         query = ` ${oper} ${arg1} ${arg3} '${qs[arg2]}' `;
     }
