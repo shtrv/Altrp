@@ -183,7 +183,7 @@ export default function renderInputRadio(settings, device) {
         // @ts-ignore
         leftValue.forEach(item => {
           if (!result) {
-            result = altrpCompare(rightValue, item, "contain");
+            result = altrpCompare(rightValue, item, "==");
           }
         });
         return result;
