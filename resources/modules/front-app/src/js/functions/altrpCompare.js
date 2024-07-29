@@ -88,7 +88,7 @@ export default function altrpCompare(
       let result = false;
       leftValue.forEach(item => {
         if (!result) {
-          result = altrpCompare(rightValue, item, "contain");
+          result = altrpCompare(rightValue, item, "==");
         }
       });
       return result;
