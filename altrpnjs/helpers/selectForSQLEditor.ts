@@ -137,7 +137,11 @@ export function convertShortcodes(sql:string, qs:any):string {
     let code = sql.slice(openPos+2, closePos);
 
     if(code.indexOf( 'IF_AND_REQUEST' ) !== -1) {
-      _sql = _sql.replace(shortCode, replaceIfAndRequest(code, qs))
+      _sql = _sql.replace(shortCode, replaceIfAndRequest(code, qs, 'AND'))
+    }
+
+    if(code.indexOf( 'IF_OR_REQUEST' ) !== -1) {
+      _sql = _sql.replace(shortCode, replaceIfAndRequest(code, qs, 'OR'))
     }
 
     if(code.indexOf( 'IS_NULL' ) !== -1) {
@@ -152,7 +156,7 @@ export function convertShortcodes(sql:string, qs:any):string {
 }
 
 
-export function replaceIfAndRequest(code:string, qs:any):string {
+export function replaceIfAndRequest(code:string, qs:any, oper: string):string {
 
   let query = ``
   let args = code.split(':');
@@ -172,23 +176,23 @@ export function replaceIfAndRequest(code:string, qs:any):string {
         if (Array.isArray(qs[arg2])) {
           searchable = qs[arg2].toString();
         }
-        query = ` AND ${arg1} ${arg3 == 'IN' ? arg3 : 'NOT IN'} (${searchable}) `;
+        query = ` ${oper} ${arg1} ${arg3 == 'IN' ? arg3 : 'NOT IN'} (${searchable}) `;
         break;
       case 'LIKE':
       case 'ILIKE':
         searchable = `'%${qs[arg2]}%'`;
-        query = ` AND ${arg1} ${arg3} ${searchable} `;
+        query = ` ${oper} ${arg1} ${arg3} ${searchable} `;
         break;
       case 'START_LIKE':
         searchable = `'%${qs[arg2]}'`;
-        query = ` AND ${arg1} LIKE ${searchable} `;
+        query = ` ${oper} ${arg1} LIKE ${searchable} `;
         break;
       case 'END_LIKE':
         searchable = `'${qs[arg2]}%'`;
-        query = ` AND ${arg1} LIKE ${searchable} `;
+        query = ` ${oper} ${arg1} LIKE ${searchable} `;
         break;
       default:
-        query = ` AND ${arg1} ${arg3} '${qs[arg2]}' `;
+        query = ` ${oper} ${arg1} ${arg3} '${qs[arg2]}' `;
     }
   }
   return query;
