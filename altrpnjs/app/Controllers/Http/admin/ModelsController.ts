@@ -837,7 +837,7 @@ export default class ModelsController {
     await exec(`node ${base_path('ace')} generator:model --delete --id=${model.id}`)
     await exec(`node ${base_path('ace')} generator:router`)
 
-    const client = Database.connection(Env.get('DB_CONNECTION'))
+    //const client = Database.connection(Env.get('DB_CONNECTION'))
     await Customizer.query().where('model_id', model.id).update({
       model_id: null
     })
