@@ -222,10 +222,10 @@ class AdminSettings extends Component {
               <span className="admin-breadcrumbs__separator">/</span>
               <span className="admin-breadcrumbs__current">Builder</span>
             </div>
-            {this.state.activeTab === 6 && (
+            {this.state.activeTab === 5 && (
               <button className="btn" onClick={this.toggleModalCategory}>Add Category</button>
             )}
-            {this.state.activeTab === 7 && (
+            {this.state.activeTab === 6 && (
               <button className="btn" onClick={this.toggleModalImageSettings}>Add Image Settings</button>
             )}
           </div>
@@ -236,7 +236,7 @@ class AdminSettings extends Component {
             <TabList className="nav nav-pills admin-pills">
               <Tab>General</Tab>
               <Tab>Style</Tab>
-              <Tab>Integrations</Tab>
+              {/*<Tab>Integrations</Tab>*/}
               <Tab>Advanced</Tab>
               <Tab>Updates</Tab>
               <Tab>Mail</Tab>
@@ -450,12 +450,12 @@ class AdminSettings extends Component {
             <TabPanel>
               <StylesSettings />
             </TabPanel>
-            <TabPanel>
-              <div className="admin_settings_integrations">
-                <Websockets />
-                <Telegram />
-              </div>
-            </TabPanel>
+            {/*<TabPanel>*/}
+            {/*  <div className="admin_settings_integrations">*/}
+            {/*    <Websockets />*/}
+            {/*    <Telegram />*/}
+            {/*  </div>*/}
+            {/*</TabPanel>*/}
             <TabPanel>
               <React.Suspense fallback={"Loading"}>
                 <AdvancedSettings />

@@ -12,142 +12,153 @@ import {
 import Repeater from '../classes/Repeater';
 import axios from "axios";
 import {getElementSettingsSuffix} from "../helpers";
+import LANG_OPTIONS from "../const/LANG_OPTIONS";
 
 let defaultOptions = [
   {
-    value: 'form',
-    label: 'Form'
+    "value": "condition",
+    "label": "Condition"
   },
   {
-    value: 'toggle_element',
-    label: 'Toggle Elements'
+    "value": "custom_code",
+    "label": "Custom JS-Code"
   },
   {
-    value: 'toggle_popup',
-    label: 'Toggle Popup'
+    "value": "data_to_csv",
+    "label": "Data Convert to CSV"
   },
   {
-    value: 'print_page',
-    label: 'Print Page'
+    "value": "delay",
+    "label": "Delay"
   },
   {
-    value: 'print_elements',
-    label: 'Print Elements'
+    "value": "dropbar",
+    "label": "Dropbar Toggle"
   },
   {
-    value: 'scroll_to_element',
-    label: 'Scroll to Element'
+    "value": "elements_to_pdf",
+    "label": "Elements to PDF"
   },
   {
-    value: 'scroll_to_top',
-    label: 'Scroll to Top'
+    "value": "form",
+    "label": "Form"
   },
   {
-    value: 'scroll_to_bottom',
-    label: 'Scroll to Bottom'
+    "value": "forms_manipulate",
+    "label": "Forms Manipulate"
   },
   {
-    value: 'redirect',
-    label: 'Redirect'
+    "value": "login",
+    "label": "Login"
   },
   {
-    value: 'reload',
-    label: 'Reload Page'
+    "value": "logout",
+    "label": "Logout"
   },
   {
-    value: 'trigger',
-    label: 'Trigger Action'
+    "value": "oauth",
+    "label": "Oidc Client"
   },
   {
-    value: 'page_to_pdf',
-    label: 'Page to PDF'
+    "value": "page_to_pdf",
+    "label": "Page to PDF"
   },
   {
-    value: 'elements_to_pdf',
-    label: 'Elements to PDF'
+    "value": "play_sound",
+    "label": "Play Sound"
   },
   {
-    value: 'data_to_csv',
-    label: 'Data Convert to CSV'
+    "value": "print_elements",
+    "label": "Print Elements"
   },
   {
-    value: 'table_to_csv',
-    label: 'Table to CSV'
+    "value": "print_page",
+    "label": "Print Page"
   },
   {
-    value: 'table_to_xml',
-    label: 'Table to XML'
-  },
-  // {
-  //   value: 'table_to_xls',
-  //   label: 'Table to XLS'
-  // },
-  {
-    value: 'login',
-    label: 'Login'
+    "value": "redirect",
+    "label": "Redirect"
   },
   {
-    value: 'logout',
-    label: 'Logout'
+    "value": "reload",
+    "label": "Reload Page"
   },
   {
-    value: 'set_data',
-    label: 'Set Data'
+    "value": "scroll_to_bottom",
+    "label": "Scroll to Bottom"
   },
   {
-    value: 'forms_manipulate',
-    label: 'Forms Manipulate'
+    "value": "scroll_to_element",
+    "label": "Scroll to Element"
   },
   {
-    value: 'update_current_datasources',
-    label: 'Update Current Datasources'
+    "value": "scroll_to_top",
+    "label": "Scroll to Top"
   },
   {
-    value: 'update_current_model',
-    label: 'Update Current Model'
+    "value": "set_data",
+    "label": "Set Data"
   },
   {
-    value: 'custom_code',
-    label: 'Custom JS-Code'
+    "value": "set_cookie",
+    "label": "Set cookie"
   },
   {
-    value: 'play_sound',
-    label: 'Play Sound'
+    "value": "set_lang",
+    "label": "Set language"
   },
   {
-    value: 'delay',
-    label: 'Delay'
+    "value": "socket_emit",
+    "label": "Socket emit"
   },
   {
-    value: 'condition',
-    label: 'Condition'
+    "value": "socket_receiver",
+    "label": "Socket receiver"
   },
   {
-    value: 'vi_toggle',
-    label: 'Version for the Visually Impaired Toggle'
+    "value": "table_to_csv",
+    "label": "Table to CSV"
   },
   {
-    value: 'oauth',
-    label: 'Oidc Client'
+    "value": "table_to_xml",
+    "label": "Table to XML"
   },
   {
-    value: 'socket_receiver',
-    label: 'Socket receiver'
+    "value": "toggle_element",
+    "label": "Toggle Elements"
   },
   {
-    value: "socket_emit",
-    label: "Socket emit"
+    "value": "toggle_popup",
+    "label": "Toggle Popup"
   },
   {
-    value: "set_cookie",
-    label: "Set cookie"
-  }
+    "value": "toggle_theme",
+    "label": "Toggle Theme"
+  },
+  {
+    "value": "timer",
+    "label": "Timer"
+  },
+  {
+    "value": "trigger",
+    "label": "Trigger Action"
+  },
+  {
+    "value": "update_current_datasources",
+    "label": "Update Current Datasources"
+  },
+  {
+    "value": "update_current_model",
+    "label": "Update Current Model"
+  },
+  {
+    "value": "vi_toggle",
+    "label": "Version for the Visually Impaired Toggle"
+  },
 ]
-console.error('trace')
 defaultOptions = window.editorAPI.applyPluginsFiltersSync('default_actions_controllers_type_options', defaultOptions)
 
 /**
- * Добавляет контроллеры действия для элемента
  * @param {BaseElement} element - элемент
  * @param {string} sectionLabel - заголовок секции
  * @param {string} idPrefix - префикс, который добавляется ко всем id секция и контроллеров
@@ -161,7 +172,8 @@ export function actionsControllers(
   idPrefix = '',
   tab = TAB_CONTENT,
   showChangeEndControllers = false,
-  forSection = false
+  forSection = false,
+  options
 ) {
   /**
    * actions START
@@ -327,6 +339,56 @@ export function actionsControllers(
     locked: true,
   });
 
+  actionsRepeater.addControl('time', {
+    type: CONTROLLER_TEXT,
+    dynamic: false,
+    responsive: false,
+    label: 'Time',
+    conditions: {
+      type: ['timer']
+    },
+    placeholder: 'now',
+    locked: true,
+  });
+
+
+  actionsRepeater.addControl('time_save', {
+    type: CONTROLLER_TEXT,
+    dynamic: false,
+    responsive: false,
+    label: 'Path to Save',
+    conditions: {
+      type: ['timer']
+    },
+    locked: true,
+  });
+
+  actionsRepeater.addControl('time_format', {
+    label: 'Time Format',
+    type: CONTROLLER_SELECT,
+    responsive: false,
+    nullable: true,
+    options: [
+      {
+        value: 'seconds',
+        label: 'Seconds'
+      },
+      {
+        value: 'mm:ss',
+        label: 'mm:ss'
+      },
+      {
+        value: 'hh:mm:ss',
+        label: 'hh:mm:ss'
+      },
+    ],
+    default: 'seconds',
+
+    conditions: {
+      type: 'timer'
+    },
+    locked: true,
+  });
   actionsRepeater.addControl('forms_change', {
     label: 'Change',
     type: CONTROLLER_SELECT,
@@ -455,38 +517,14 @@ export function actionsControllers(
     locked: true,
   });
 
-  actionsRepeater.addControl('form_page_select', {
-    label: 'Page',
+  actionsRepeater.addControl('lang', {
+    label: 'Language',
     type: CONTROLLER_SELECT2,
-    prefetch_options: true,
-    options_resource: '/admin/ajax/pages_options',
+    options: LANG_OPTIONS,
     conditions: {
-      type: ['redirect']
+      type: ['set_lang']
     },
-    locked: true,
-    onChange: async function ({label}) {
-      let pathname = ""
-      try {
-        let pages = await axios.get("/admin/ajax/pages")
-        let findPage = pages.data.find(item => item.title === label)
-        if (findPage) {
-          pathname = findPage.path
-        }
-        this.repeater.changeValue(
-          this.itemindex,
-          "form_url" + getElementSettingsSuffix(this.controller, false),
-          pathname
-        );
-        this.repeater.changeValue(
-          this.itemindex,
-          "form_url" + getElementSettingsSuffix(this.controller, false),
-          pathname
-        );
-      } catch (error) {
-        alert("Page request error")
-        console.error(error)
-      }
-    }
+
   });
 
   actionsRepeater.addControl('form_customizer', {
@@ -635,7 +673,8 @@ export function actionsControllers(
         'toggle_element',
         'print_elements',
         'elements_to_pdf',
-        'forms_manipulate'
+        'forms_manipulate',
+        'dropbar',
       ]
     },
     locked: true,
@@ -787,6 +826,17 @@ export function actionsControllers(
     },
     locked: true,
   });
+  actionsRepeater.addControl('params', {
+    type: CONTROLLER_TEXTAREA,
+    label: 'Params for Update',
+    responsive: false,
+    dynamic: false,
+    description: 'param_1 | {{altrpdata.alias}}',
+    conditions: {
+      type: ['update_current_datasources']
+    },
+    locked: true,
+  });
 
   actionsRepeater.addControl('condition_left', {
     type: CONTROLLER_TEXTAREA,
@@ -859,6 +909,10 @@ export function actionsControllers(
         value: 'remove_items'
       },
       {
+        label: 'Push/Remove Items',
+        value: 'push_remove_items'
+      },
+      {
         label: 'Delete',
         value: 'delete'
       }
@@ -889,7 +943,7 @@ export function actionsControllers(
     description: 'Value or Path to Value',
     conditions: {
       type: ['set_data'],
-      set_type: ['set', 'toggle_set', 'push_items',]
+      set_type: ['set', 'toggle_set', 'push_items', 'push_remove_items']
     },
     locked: true,
   });

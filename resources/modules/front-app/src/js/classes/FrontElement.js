@@ -343,9 +343,14 @@ class FrontElement {
    * @return {string}
    */
   getIdForAction(){
+
+    let altrpIndex = null
+    if(_.isNumber(this.getCurrentModel()?.getProperty('altrpIndex'))){
+      altrpIndex = this.getCurrentModel()?.getProperty('altrpIndex') + ''
+    }
     if(! this.idForAction){
       this.idForAction = this.getId() +
-        (this.getCurrentModel()?.getProperty('altrpIndex')
+        ( altrpIndex
           || this.getCurrentModel()?.getProperty('id')
           || '');
     }
@@ -387,6 +392,7 @@ class FrontElement {
     if(_.get(settings, settingName) === false || _.get(settings, settingName) === 0){
       return _.get(settings, settingName);
     }
+
     return _.get(settings, settingName) || _default;
   }
 
@@ -564,6 +570,7 @@ class FrontElement {
     switch (elementName) {
       case 'input':
       case 'input-textarea':
+      case 'input-tel':
       case 'input-text-autocomplete':
       case 'stars':
       case  'input-date-range':
@@ -730,7 +737,7 @@ class FrontElement {
       rootElement.isCard = false;
       return;
     }
-    if(! model instanceof AltrpModel){
+    if(! (model instanceof AltrpModel)){
       model = new AltrpModel(model);
     }
     index = Number(index);
@@ -865,12 +872,21 @@ class FrontElement {
     const rootElement = this.getRoot();
     return rootElement ? (rootElement.templateType || 'content') : 'content';
   }
+  deleteSetting(settingName){
+    const newSettings = {...this.settings}
+    delete newSettings[settingName]
 
+    this.settings = newSettings;
+    if(this.component){
+      this.component.setState(state => ({...state, settings: newSettings}));
+    }
+  }
   /**
    * Обновляем настройки элемента на фронте с обновлением компонента
    * @param value
    * @param settingName
    */
+
   updateSetting(value, settingName = ''){
     let newSettings;
     if(! settingName && _.isObject(value)){
@@ -890,6 +906,13 @@ class FrontElement {
   async beforeUnmount(){
     let formsManager = await import(/* webpackChunkName: 'FormsManager' */'../../../../editor/src/js/classes/modules/FormsManager.js');
     formsManager.removeField(this)
+  }
+  updateErrorState = (errorState = false)=>{
+    if(! this.component){
+      return
+    }
+
+    this.component.setState(state=>({...state, errorState}))
   }
 }
 

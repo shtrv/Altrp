@@ -1,26 +1,47 @@
 {{{imports}}}
 import _ from 'lodash'
+import AltrpBaseController from "../Controllers/AltrpBaseController";
+import Database from "@ioc:Adonis/Lucid/Database";
+const DB = Database?.default ? Database.default : Database;
+import AltrpBaseModel from '../Models/AltrpBaseModel'
 
-export default class {{{classname}}} extends Orm.BaseModel {
+export default class {{{classname}}} extends AltrpBaseModel {
 
-  @Orm.afterSave()
-    public static afterSave(model) {
-      Event.emit("altrp_event",{type: "altrp_models.{{{classname}}}.afterSave", data: model})
+  static async find(find){
+    if(require('../../helpers/validGuid').default(find)){
+      return await super.query().where('uuid', find).first()
     }
+    return await super.find(find)
+  }
 
   @Orm.afterCreate()
-    public static afterCreate(model) {
-      Event.emit("altrp_event",{type: "altrp_models.{{{classname}}}.afterCreate", data: model})
+    public static async afterCreate(model) {
+      await Event.emit("altrp_event",{type: "altrp_models.{{{classname}}}.afterCreate", data: model})
+    }
+
+  @Orm.beforeCreate()
+    public static async beforeCreate(model) {
+      await Event.emit("altrp_event",{type: "altrp_models.{{{classname}}}.beforeCreate", data: model})
     }
 
   @Orm.afterUpdate()
-    public static afterUpdate(model) {
-        Event.emit("altrp_event",{type: "altrp_models.{{{classname}}}.afterUpdate", data: model})
+    public static async afterUpdate(model) {
+        await Event.emit("altrp_event",{type: "altrp_models.{{{classname}}}.afterUpdate", data: model})
+      }
+
+  @Orm.beforeUpdate()
+    public static async beforeUpdate(model) {
+        await Event.emit("altrp_event",{type: "altrp_models.{{{classname}}}.beforeUpdate", data: model})
       }
 
   @Orm.afterDelete()
-    public static afterDelete(model) {
-      Event.emit("altrp_event",{type: "altrp_models.{{{classname}}}.afterDelete", data: model})
+    public static async afterDelete(model) {
+      await Event.emit("altrp_event",{type: "altrp_models.{{{classname}}}.afterDelete", data: model})
+    }
+
+  @Orm.beforeDelete()
+    public static async beforeDelete(model) {
+      await Event.emit("altrp_event",{type: "altrp_models.{{{classname}}}.beforeDelete", data: model})
     }
 
   @Orm.afterFind()

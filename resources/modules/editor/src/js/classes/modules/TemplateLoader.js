@@ -50,9 +50,9 @@ export class TemplateLoader {
     try {
 
       const resource = new Resource({route: `/ajax/templates/${templateId}`});
-      let template = await resource.getQueried({withStyles: true});
-
+      let template = this.templatesCache[templateId];
       if (update) {
+         template = await resource.getQueried({withStyles: true});
         if(_.isString(template.styles)){
           let _document = isEditor() ?
               document.getElementById("editorContent").contentWindow.document :
@@ -170,7 +170,7 @@ export class TemplateLoader {
         resolve(frontElementsFabric.parseData(templateData))
       })
       link.setAttribute('rel', 'stylesheet')
-      link.setAttribute('href',  `/altrp/css/DEFAULT_BREAKPOINT/${templateGUID}.css`)
+      link.setAttribute('href',  `/altrp/css/DEFAULT_BREAKPOINT/${templateGUID}.css?${window?.altrp?.randomString || 0}`)
 
       _doc.head.appendChild(link)
 
@@ -183,6 +183,15 @@ export class TemplateLoader {
          */
         link = _doc.createElement('link')
         link.addEventListener('load',()=>{
+          if(! template){
+            resolve(null)
+            return
+          }
+          let templateData = _.get(template, 'data');
+          templateData = JSON.parse(templateData);
+          resolve(frontElementsFabric.parseData(templateData))
+        })
+        link.addEventListener('error',()=>{
           if(! template){
             resolve(null)
             return

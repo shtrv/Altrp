@@ -20,8 +20,8 @@ import get_altrp_setting from "../../helpers/get_altrp_setting";
 import storage_path from "../../helpers/storage_path";
 import config from "../../helpers/config";
 import altrpRandomId from "../../helpers/altrpRandomId";
-import public_path from "../../helpers/path/public_path";
-import GlobalStyle from "App/Models/GlobalStyle";
+import {DateTime} from "luxon";
+import Menu from "App/Models/Menu";
 
 export default class PageGenerator extends BaseGenerator {
   public __altrp_global__: {
@@ -63,15 +63,11 @@ export default class PageGenerator extends BaseGenerator {
       return false
     }
 
-
     if (!page.guid) {
       console.error(`Page ${page.id} render error. Need more data`);
       return false
     }
 
-    if(! fs.existsSync(public_path('altrp/css/vars/altrp-vars.css'))){
-      GlobalStyle.updateCssFile()
-    }
     const randomString = altrpRandomId()
 
     this.page = page
@@ -87,21 +83,21 @@ export default class PageGenerator extends BaseGenerator {
       })
     })
 
-    const presets = []
+    let presets = []
 
     let elements_list: string[] | string = await page.extractElementsNames(true, presets)
+
     let all_elements_list: string[] | string = await page.extractElementsNames(false)
-
-
+    presets = _.uniq(presets)
     let presetsLinks = presets.map(p=>{
-      return `<link rel="stylesheet" href="/altrp/css/altrp-presets/${p}.css"/>`
+      return `<link rel="stylesheet" href="/altrp/css/altrp-presets/${p}.css?${randomString}"/>`
     }).join('')
 
     const {extra_header_styles, extra_footer_styles} = await this.getExtraStyles(elements_list, all_elements_list)
     elements_list = elements_list.map(e => `'${e}'`)
 
-    const head_start = get_altrp_setting('head_start', '', true) + presetsLinks
-    const head_end = get_altrp_setting('head_end', '', true)
+    const head_start = get_altrp_setting('head_start', '', true)
+    const head_end = get_altrp_setting('head_end', '', true) + presetsLinks
     const body_start = get_altrp_setting('body_start', '', true)
     const body_end = get_altrp_setting('body_end', '', true)
 
@@ -138,7 +134,13 @@ export default class PageGenerator extends BaseGenerator {
     for (const screen of SCREENS) {
 
       let children_content = await this.page.getChildrenContent(screen.name)
+      // @ts-ignore
+      children_content = children_content.replaceAll('__generaterandom__', randomString);
       let all_styles = ''
+      let menus = await Menu.getJSON( {
+        content:children_content,
+        moreContent:[pageAreas],
+        raw: true})
       try {
         all_styles = await this.page.getAllStyles(children_content)
       }catch (e) {
@@ -162,6 +164,8 @@ export default class PageGenerator extends BaseGenerator {
             : `http://localhost:3002/src/h-altrp.js?${randomString}`,
           children_content,
           fonts,
+          randomString,
+          random_string: randomString,
           elements_list,
           pages: JSONStringifyEscape(pages),
           altrp_settings: JSONStringifyEscape(altrp_settings),
@@ -171,6 +175,7 @@ export default class PageGenerator extends BaseGenerator {
           all_site_js,
           extra_header_styles,
           plugin_frontend_head,
+          __generaterandom__: randomString,
           plugin_frontend_bottom,
           extra_footer_styles,
           head_start,
@@ -183,11 +188,15 @@ export default class PageGenerator extends BaseGenerator {
             pageGuid: page.guid,
             popupsGuids: await page.getPopupsGuids(),
             randomString,
+            menus,
             isNodeJS: true
           }),
         }, false, true)
     }
+    page.updatedAt = DateTime.now()
+    await page.save()
     clearRequireCache()
+
     return true
   }
 
@@ -231,7 +240,7 @@ export default class PageGenerator extends BaseGenerator {
       }
       font = encodeURIComponent(font);
       font += ':100,100italic,200,200italic,300,300italic,400,400italic,500,500italic,600,600italic,700,700italic,800,800italic,900,900italic'
-      let fontUrl = 'https://fonts.googleapis.com/css?family=' + font + '&subset=cyrillic&display=swap';
+      let fontUrl = 'https://fonts.bunny.net/css?family=' + font + '&subset=cyrillic&display=swap';
       fontUrl = '<link rel="stylesheet"  href="' + fontUrl + '" />'
       return fontUrl
     }).join('')

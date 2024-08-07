@@ -1,9 +1,31 @@
 # ALTRP
 
 ## Changelog
-## test version build 69
+### test version build 154
 
-### 1.4.8
+
+### 1.4.9
+* Add Internationalization for Menu Items
+* Add Elements Filters for Plugins Widgets
+* Add Spinner Loader for `Button` Widget
+* Add Override Main Page Text Setting for `Breadcrumbs` Widget
+* Add Themes for Styling
+* Add Permissions Support
+* Add `Helper` Robotizer Type
+* Add Language Switch Action and Database Table for Internationalization
+* Add `Event` Node for Robotizers
+* Add `Validator` Node for Robotizers
+* Add `Email Template` Node to Robotizer
+* Add `Input Phone` Widget
+* Add `Params` Settings for Current Datasource Update Action
+* Add `Dropbar Toggle` Widget Action
+* Add `Spacing` Presets for Sizes
+* Optimize Global CSS Variables Generating
+* Select Widget can Receive Default value as Single Option Object 
+* Fix Possible Node Binding Error
+* Fix Non Latin Issue URI components
+
+### 1.4.8 
 * Add Pagination to Media Browser
 * Add Static Properties to Custom Models
 * Add Preloading Relations on Page's Models

@@ -414,6 +414,7 @@ class SingleElementWrapper extends Component {
     const styles = {};
 
     if (!this.state.elementDisplay) {
+
       styles.display = "none";
     }
     let CSSId = this.props.element.getSettings("advanced_element_id", "");
@@ -520,6 +521,7 @@ class SingleElementWrapper extends Component {
     }
     if (WrapperComponent === React.Fragment) {
       wrapperProps = {};
+
     }
     this.updateHTMLElementDisplay()
 

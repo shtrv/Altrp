@@ -36,6 +36,7 @@ export default class ElementRenderer {
       global_styles_presets: string;
       conditional_display_choose: string;
       conditional_roles?: [];
+      conditional_permissions?: [];
       text?: string;
       content?: string;
       advanced_element_id?: string,
@@ -56,7 +57,10 @@ export default class ElementRenderer {
     }/${this.element.name}.stub`)
   }
 
-  async render(screenName: string, randomString): Promise<string> {
+  async render(screenName: string, randomString, {
+    page,
+    template,
+  }): Promise<string> {
     const settings: any = this.element.settings
     let reactElement = this.element.settings?.react_element || (DEFAULT_REACT_ELEMENTS.indexOf(this.getName()) !== -1)
     if(! reactElement && this.element.settings['skeleton:enable']){
@@ -78,11 +82,15 @@ export default class ElementRenderer {
       advanced_element_id,
       conditional_display_choose,
       conditional_roles,
+      conditional_permissions = [],
     } = this.element.settings
     let children_content = ''
     for (const child of this.element.children) {
       let renderer = new ElementRenderer(child)
-      children_content += await renderer.render(screenName, randomString)
+      children_content += await renderer.render(screenName, randomString, {
+        page,
+        template
+      })
     }
     let element_content = '';
     const columns_count = this.element.children.length;
@@ -145,7 +153,10 @@ export default class ElementRenderer {
           element_content = await render({
             ...this.element.settings,
             __elementId: this.getForIdActions()
-          }, screenName, this.getId(), randomString)
+          }, screenName, this.getId(), randomString, {
+            page,
+            template
+          })
         }
         if (this.getName() === 'section_widget') {
           element_content =
@@ -214,7 +225,12 @@ export default class ElementRenderer {
         classes += ` altrp-element-role_${r} `
       })
     }
+    if (conditional_permissions?.length && conditional_display_choose === 'auth') {
 
+      conditional_permissions.forEach(r => {
+        classes += ` altrp-element-permission_${r} `
+      })
+    }
     if(conditional_display_choose){
       classes += ` altrp-element-auth-type_${conditional_display_choose} `
     }

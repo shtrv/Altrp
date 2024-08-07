@@ -56,9 +56,19 @@ class AdminBar extends React.Component {
       visiblePopupTemplate: !state.visiblePopupTemplate
     }));
   }
+  toggleVisiblePopupMenus = (e)=> {
+    e.stopPropagation();
+    this.setState(state => ({
+      ...state,
+      visiblePopupMenus: !state.visiblePopupMenus
+    }));
+  }
 
   openTemplate(id) {
     return () => window.open(`/admin/editor?template_id=${id}`, "_blank");
+  }
+  openMenu(id) {
+    return () => window.open(`/admin/menus/${id}`, "_blank");
   }
 
   openPageSettings() {
@@ -99,7 +109,18 @@ class AdminBar extends React.Component {
   }
 
   renderResultSearch(resultSearch = null) {
-    return JSON.stringify(getDataByPath(this.state.valueInput), null, 2);
+    return JSON.stringify(getDataByPath(this.state.valueInput), (_, v) =>{
+        switch (typeof v){
+          case "bigint":
+          case "BigInt":{
+            return v.toString()
+          }
+          default:{
+            return v
+          }
+        }
+    }
+      , 2);
   }
 
 
@@ -133,7 +154,18 @@ class AdminBar extends React.Component {
   }
 
   handleClickCopy() {
-    JSON.stringify(getDataByPath(this.state.valueInput), null, "\t").select();
+    JSON.stringify(getDataByPath(this.state.valueInput), (_, v) =>{
+        switch (typeof v){
+          case "bigint":
+          case "BigInt":{
+            return v.toString()
+          }
+          default:{
+            return v
+          }
+        }
+      }
+      , "\t").select();
     document.execCommand("copy");
   }
 
@@ -281,7 +313,7 @@ class AdminBar extends React.Component {
                 {iconsManager.renderIcon("admin-new-bar", {
                   className: "admin-bar__tool-svg"
                 })}{" "}
-                Edit-Template
+                Edit Template
               </span>
 
               {this.state.visiblePopupTemplate && (
@@ -306,6 +338,7 @@ class AdminBar extends React.Component {
                                 className="admin-bar__popup-popups-item"
                                 onClick={this.openTemplate(item.id)}
                                 key={`popup-${index}`}
+                                title={item.name}
                               >
                                 {item.name}
                               </div>
@@ -333,8 +366,9 @@ class AdminBar extends React.Component {
               {iconsManager.renderIcon("admin-settings-bar", {
                 className: "admin-bar__tool-svg"
               })}{" "}
-              Page-Settings
+              Page Settings
             </div>
+            {this.mbRenderMenusLinks()}
             {/*<div className="admin-bar__tool">*/}
               {/*{iconsManager.renderIcon('admin-bar3', {className: "admin-bar__tool-svg"})} Clear Cache*/}
             {/*</div>*/}
@@ -421,6 +455,42 @@ class AdminBar extends React.Component {
         </div>
       </AdminBarWrapper>
     );
+  }
+
+  mbRenderMenusLinks() {
+    const menus = window.altrp?.menus || []
+
+    if(! menus.length){
+      return ''
+    }
+    return    <div className="admin-bar__tool">
+              <span onClick={this.toggleVisiblePopupMenus}>
+                {iconsManager.renderIcon("admin-new-bar", {
+                  className: "admin-bar__tool-svg"
+                })}{" "}
+                Edit Menu
+              </span>
+
+      {this.state.visiblePopupMenus && (
+        <div
+          className="admin-bar__popup-template admin-bar__popup-template_menus"
+        >
+          {menus.map((item, index) => {
+
+                return (
+                  <div
+                    className="admin-bar__popup-template-item"
+                    key={`menu-${index}`}
+                    onClick={this.openMenu(item.id)}
+                  >
+                    {item?.name}
+                  </div>
+                );
+            })
+          }
+        </div>
+      )}
+    </div>
   }
 }
 

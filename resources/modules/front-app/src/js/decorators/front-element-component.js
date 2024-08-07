@@ -169,8 +169,7 @@ function componentDidMount() {
  *
  * @param nextProps
  */
-function shouldComponentUpdate(nextProps) {
-  // console.log(this.elementName);
+function shouldComponentUpdate(nextProps, nextState) {
 
   if(this.props.altrpPageState !== nextProps.altrpPageState){
     return  true
@@ -329,6 +328,10 @@ function isDisabled(){
     return false;
   }
   const { element } = this.props;
+  const { inAction } = this.state;
+  if(inAction){
+    return true
+  }
   const disabled_enable = element.getSettings('disabled_enable');
   if(! disabled_enable){
     return false

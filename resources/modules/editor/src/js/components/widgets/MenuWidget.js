@@ -8,6 +8,7 @@ import mbParseJSON from "../../../../../front-app/src/js/functions/mb-parse-JSON
 import {Button,  Menu, MenuItem, Position} from '@blueprintjs/core'
 import {Popover2} from '@blueprintjs/popover2'
 import defaultBurgerMenuIcon from "./misc/defaultBurgerMenuIcon";
+import replaceContentWithData from "../../../../../front-app/src/js/functions/replaceContentWithData";
 
 
 
@@ -153,8 +154,15 @@ class MenuWidget extends Component {
 
     return <>
       {items.map((item) => {
+        if(!this.displayItem(item)){
+          return ''
+        }
         const _popoverProps = {...popoverProps}
         _popoverProps.portalClassName += ` altrp-portal-parent-item-key${item.id} `
+        let {
+          label = ''
+        } = item
+        label = replaceContentWithData(label)
         return <MenuItem
           ref={ref}
           popoverProps={_popoverProps}
@@ -165,6 +173,18 @@ class MenuWidget extends Component {
           key={item.id}
           onClick={(e) => {
             e.preventDefault();
+
+            if(item.url?.indexOf('event:') === 0){
+              const event = new CustomEvent(item.url?.replace('event:', ''),
+                {
+                  detail: {
+                    element: this.props.element,
+                  }
+                })
+              document.dispatchEvent(event)
+              window.dispatchEvent(event)
+              return;
+            }
             if(! window.altrp?.spa_off){
 
               return;
@@ -179,8 +199,8 @@ class MenuWidget extends Component {
             this.props.history.push(item.url);
           }}
           icon={<span className={`${classes} altrp-menu-item__icon`} dangerouslySetInnerHTML={{__html: item.icon}}/>}
-          // text={<Link className="altrp-menu-item__link" to={item.url}>{item.label}</Link>}>
-          text={item.label}>
+
+          text={label}>
           {this.renderSubItems(item.children, depth + 1, item.id)}
         </MenuItem>
 
@@ -307,6 +327,19 @@ class MenuWidget extends Component {
       return false;
     }
     return conditionChecker(item, this.props.element.getCurrentModel())
+  }
+  displayItem(item) {
+    if(isEditor()){
+      return  true
+    }
+    if(! item || !item.disOperator || ! item.disValue || ! item.disField){
+      return true;
+    }
+    return conditionChecker({
+      operator: item.disOperator,
+      value: item.disValue,
+      modelField: item.disField
+    }, this.props.element.getCurrentModel())
   }
 }
 

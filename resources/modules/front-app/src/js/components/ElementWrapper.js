@@ -18,7 +18,8 @@ class ElementWrapper extends Component {
     super(props);
 
     this.state = {
-      elementDisplay: !this.props.element.getSettings("default_hidden")
+      elementDisplay: !this.props.element.getSettings("default_hidden"),
+      Informer: ''
     };
     this.reactElement = this.props.element.getSettings("react_element");
     this.elementId = this.props.element.getId();
@@ -30,6 +31,7 @@ class ElementWrapper extends Component {
     if(! isEditor()){
       appStore.dispatch(addElement(this));
     }
+
   }
 
   /**
@@ -55,6 +57,12 @@ class ElementWrapper extends Component {
       this.props.element.updateFonts();
     }
     const {element} = this.props
+    const {informers = []} = element.getSettings()
+    if(informers?.length){
+      import(/* webpackChunkName: 'Informer' */'../components/Informer').then(Informer=>{
+        this.setState(state=>({...state, Informer: Informer.default}))
+      })
+    }
     // const mountElementEvent = new Event(`altrp-mount-element:${element.getId()}` );
     // const mountElementTypeEvent = new Event(`altrp-mount-element:${element.getName()}` );
     // document.dispatchEvent(mountElementEvent)
@@ -140,6 +148,14 @@ class ElementWrapper extends Component {
       let title = appStore.getState().currentTitle;
       title = replaceContentWithData(title);
     }
+    if(this.props.element.getResponsiveSetting('sticky') === 'half_top'){
+      if(! this.halfTopElement || this.halfTopElement !== this.elementWrapperRef.current){
+        this.halfTopElement = this.elementWrapperRef.current
+        import('../functions/elements/sticky-half-top').then(module=>{
+          module.default(this.halfTopElement)
+        })
+      }
+    }
   }
 
   /**
@@ -186,17 +202,6 @@ class ElementWrapper extends Component {
 
     if ( conditional_display_choose === 'guest' ) {
       elementDisplay = user.isGuest();
-    }
-    if ( conditional_display_choose === 'auth' ) {
-
-      const roles = _.get( settings, 'conditional_roles', [] );
-      const permissions = _.get( settings, 'conditional_permissions', [] );
-
-      elementDisplay = ! user.isGuest();
-
-      if(elementDisplay){
-        elementDisplay = user.hasRoles(roles, false) || user.hasPermissions(permissions, false)
-      }
     }
 
     if (element.getSettings("conditional_other")) {
@@ -267,12 +272,29 @@ class ElementWrapper extends Component {
       return false
     }
     let {dependencies} = this.element;
+    // console.log(this.props.element.getCardModel())
+    // console.log(newProps.element.getCardModel())
+
+    if(newProps.element.getCardModel()?.getData()){
+        const newCardModel = newProps.element.getCardModel().getData()
+        if(!this._cardModel){
+          this._cardModel = newProps.element.getCardModel()?.getData()
+          return true
+        }
+        delete  this._cardModel.altrpId
+        delete  newCardModel.altrpId
+        if(!_.isEqual( newCardModel, this._cardModel)){
+          this._cardModel = newProps.element.getCardModel()?.getData()
+          return true
+        }
+    }
+
+
 
     if(newState.elementDisplay !== this.state.elementDisplay){
       return true
     }
     dependencies = dependencies || []
-
     if(newProps.altrpPageState !== this.props.altrpPageState
       && dependencies.indexOf('altrppagestate') === -1){
       ++window.countReduced
@@ -344,16 +366,44 @@ class ElementWrapper extends Component {
     const {
       hide_on_wide_screen,
       hide_on_desktop,
+      hide_desktop,
+      hide_on_mobile,
       hide_on_laptop,
       hide_on_tablet,
       hide_on_big_phone,
       hide_on_small_phone,
       hide_on_trigger,
       isFixed,
+      conditional_display_choose,
+      conditional_roles = [],
+      conditional_permissions = [],
+      informers = [],
     } = element.settings;
     let classes = `altrp-element ${this.props.element
       .getSelector()
       .replace(".", "")} altrp-element_${element.getType()}`;
+
+
+    if ( conditional_display_choose === 'auth' ) {
+
+      if (conditional_permissions?.length) {
+
+        conditional_permissions.forEach(r => {
+          classes += ` altrp-element-permission_${r} `
+        })
+      }
+      if (conditional_roles?.length) {
+
+        conditional_roles.forEach(r=>{
+          classes += ` altrp-element-role_${r} `
+        })
+      }
+      // elementDisplay = ! user.isGuest();
+      //
+      // if(elementDisplay){
+      //   elementDisplay = user.hasRoles(roles, false) || user.hasPermissions(permissions, false)
+      // }
+    }
     classes += element.getPrefixClasses() + " ";
     if (element.getType() === "widget") {
       classes += ` altrp-widget_${element.getName()}`;
@@ -369,6 +419,12 @@ class ElementWrapper extends Component {
     }
     if (hide_on_desktop) {
       classes += " hide_on_desktop";
+    }
+    if (hide_desktop) {
+      classes += ' hide_desktop';
+    }
+    if (hide_on_mobile) {
+      classes += ' hide_on_mobile';
     }
     if (hide_on_laptop) {
       classes += " hide_on_laptop";
@@ -549,7 +605,13 @@ class ElementWrapper extends Component {
           }
           {content}
         </WrapperComponent>
-
+        {this.state.Informer && informers?.length !== 0 && <div className='altrp-informers'>
+          {informers.map((item, idx)=>{
+            return <this.state.Informer
+              {...item}
+              key={`informer_${element.getId()}_${idx}`}/>
+          })}
+        </div>}
       </>
     );
   }

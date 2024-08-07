@@ -5,6 +5,11 @@ import { SketchPicker } from "react-color";
 import controllerDecorate from "../../decorators/controller";
 import ResponsiveDdMenu from "../ResponsiveDdMenu";
 import GlobalPresetColors from "./GlobalPresetColors";
+import RotateLeft from "../../../svgs/rotate-left.svg";
+import getCssVarFromGlobalStyle from "../../helpers/get-css-var-from-global-style";
+import store from "../../store/store";
+import {changeTemplateStatus} from "../../store/template-status/actions";
+import CONSTANTS from "../../consts";
 
 class ColorController extends Component {
   constructor(props) {
@@ -53,10 +58,23 @@ class ColorController extends Component {
   }
 
   setGlobal(guid) {
+    const globalColors = this.props.globalColors;
+
+    let guidColor = globalColors.filter(size => size.guid == guid)[0] || {};
+    guidColor = getCssVarFromGlobalStyle(guidColor)
+
+    const colorValue = {
+      ...guidColor,
+    };
+
+    this._changeValue({
+      ...colorValue
+    });
     getCurrentElement().setGlobalStyle(
       guid,
       this.props.controller.getSettingName()
     );
+    store.dispatch(changeTemplateStatus(CONSTANTS.TEMPLATE_NEED_UPDATE));
   }
 
   /**
@@ -70,7 +88,8 @@ class ColorController extends Component {
       this.state.colorPickedHex !== nextState.colorPickedHex ||
       nextState.active !== this.state.active ||
       nextState.show !== this.state.show ||
-      nextProps.currentState !== this.props.currentState
+      nextProps.currentState !== this.props.currentState||
+      nextProps.altrp_themes !== this.props.altrp_themes
     ) {
       return true;
     } else {
@@ -93,7 +112,7 @@ class ColorController extends Component {
   }
 
   colorChangeFromPreset(color) {
-    console.log(color);
+
     this.setState({
       colorPickedHex: color.colorPickedHex,
       colorPickedRGB: `rgba(${color.colorRGB.r}, ${color.colorRGB.g}, ${color.colorRGB.b}, ${color.colorRGB.a})`,
@@ -144,6 +163,9 @@ class ColorController extends Component {
     let colorPickerPosition = {
       marginTop: this.state.pickerPosition
     };
+    let {
+      colorPickedHex
+    } = value
 
     return (
       <div className="controller-container controller-container_color">
@@ -165,14 +187,20 @@ class ColorController extends Component {
                 style={colorPickedStyle}
               />
             </div>
-            <label className="control-color-hex">{value.colorPickedHex}</label>
+            <label className="control-color-hex">{value.name || value.colorPickedHex || ''}</label>
           </div>
           <div className="control-color-opacity-container">
             <label className="control-color-opacity">
               {(this.state.opacity * 100).toFixed() + "%"}
             </label>
           </div>
+          <div className="control-shadow-toggle " onClick={this.reset}>
+
+            <RotateLeft id="shadowContentIcon" fill="#8E94AA" width="16" height="16" viewBox="0 0 24 24"
+                        className="control-shadow-svg-content"/>
+          </div>
         </div>
+
         <div
           ref={this.contentRef}
           className={

@@ -32,6 +32,9 @@ import sharp from 'sharp';
 import sizeOf from 'image-size';
 import getAltrpTime from "../../../helpers/getAltrpTime";
 import {pluralize} from "@poppinss/utils/build/src/Helpers/string";
+import translateContent from "../../../helpers/i18n/translateContent";
+import MobileDetect from "mobile-detect";
+import getDirection from "../../../helpers/getDirection";
 
 export default class AltrpRouting {
 
@@ -53,7 +56,10 @@ export default class AltrpRouting {
   }
 
   public async getContentByUrl(url, httpContext: HttpContextContract, pageId = null):Promise<void>{
-    if (url.includes('/storage/media/')) {
+
+    var ext = url.split('.').pop();
+
+    if (url.includes('/storage/media/') && ['jpg', 'jpeg', 'webp', 'png', ].includes(ext)) {
 
       let searchFilename = base_path('/public'+url);
 
@@ -78,7 +84,6 @@ export default class AltrpRouting {
             },
           ];
 
-        var ext = url.split('.').pop();
         var parts = url.split('/');
         var requestedFileName = parts[parts.length-1];
 
@@ -100,7 +105,12 @@ export default class AltrpRouting {
 
         if (files.length == 0) {
           //files = await fs.readdirSync(folder).filter(fn => fn.startsWith(parts[5].split('.')[0]));
-          files = await fs.readdirSync(folder).filter(fn => fn.startsWith(requestedFileName.split('.')[0]));
+          if(fs.existsSync(folder)){
+            files = await fs.readdirSync(folder).filter(fn => fn.startsWith(requestedFileName.split('.')[0]));
+
+          } else {
+            files = []
+          }
         }
 
         //return JSON.stringify(files.length);
@@ -202,7 +212,7 @@ export default class AltrpRouting {
       httpContext.response.cookie('__altrp_redirect_from', httpContext.request.url(true), {
         maxAge: Date.now() + 864000000,
       })
-      return httpContext.response.redirect(page.redirect || '/')
+      return httpContext.response.redirect(page.redirect || '/', true)
     }
 
     await page.load('model');
@@ -218,18 +228,27 @@ export default class AltrpRouting {
       await Promise.all([
         user.load('avatar'),
         user.load('permissions'),
-        user.load('roles'),
+        user.load('roles', query=>{
+          query.preload('permissions')
+        }),
       ])
 
+      let permissions =  [...user.permissions]
 
       user.roles && user.roles.forEach(role =>{
         access_classes += ` front-app_role-${role.name} `
+        permissions = [
+          ...permissions,
+          ...role.permissions
+        ]
         if(role.name === 'admin'){
           access_classes += ` front-app_admin `
         }
       })
-      user.permissions && user.permissions.forEach(permission =>{
-        access_classes += ` front-app_permission-${permission} `
+
+      permissions = _.uniqBy(permissions, 'name')
+      permissions.forEach(permission =>{
+        access_classes += ` front-app_permission-${permission.name} `
       })
     } else {
       access_classes += ` front-app_auth-type-guest `
@@ -242,7 +261,7 @@ export default class AltrpRouting {
         const query = ModelClass.query()
         query.orderBy('id','desc')
         if (page.param_name && page.model_column && pageMatch?.params[page.param_name]) {
-          query.where(page.model_column, pageMatch.params[page.param_name])
+          query.where(page.model_column, decodeURIComponent(pageMatch.params[page.param_name]))
         } else if (pageMatch.params?.id) {
           query.where('id', pageMatch.params.id)
         }
@@ -269,7 +288,7 @@ export default class AltrpRouting {
               if(ModelClass.$hasRelation(relationName)) {
                 query.whereHas(relationName, query=>{
                   const tableName = pluralize(relationName)
-                  query.where(`${tableName}.${relationField}`, matchValue)
+                  query.where(`${tableName}.${relationField}`, decodeURIComponent(matchValue))
                 })
               }
             })
@@ -295,7 +314,7 @@ export default class AltrpRouting {
         }
 
         if (!await page.allowedForUser(this)) {
-          return httpContext.response.redirect(page.redirect || '/')
+          return httpContext.response.redirect(page.redirect || '/', true)
         }
 
         await page.load('model');
@@ -303,7 +322,6 @@ export default class AltrpRouting {
 
     }
 
-    let title = replaceContentWithData(page.title, model_data)
 
     // const datasources= {}
     let altrpuser: any = {
@@ -312,23 +330,54 @@ export default class AltrpRouting {
     if (user) {
       altrpuser = user.toJSON()
     }
+    // @ts-ignore
+    const detector = new MobileDetect(httpContext.request.header('user-agent') );
 
     const altrpContext = {
       ...model_data,
       ...pageMatch.params,
       altrpuser,
       altrppage: {
-        title,
         url,
+        is_mobile: detector.mobile(),
         params: httpContext.request.qs()
       }
     }
-
     const datasources = await Source.fetchDatasourcesForPage(page.id, httpContext, altrpContext)
     const device = getCurrentDevice(httpContext.request)
-    const lang = get_altrp_setting('site_language', 'en')
+    const lang = httpContext.request.cookie('altrp_lang') || get_altrp_setting('site_language', 'en')
+    const theme = httpContext.request.cookie('altrp_theme')
+    const dark_default =get_altrp_setting('dark_default')
+    const direction = getDirection(lang)
+    let html_class = `altrp-direction_${direction} `
+
+
+    if(! theme){
+      html_class += dark_default ? 'altrp-theme_dark ' : 'altrp-theme_normal '
+    } else {
+      html_class += theme
+    }
+
+    if(detector.mobile()){
+      html_class += ' is_mobile '
+    } else{
+      html_class += ' is_desktop '
+
+    }
 
     altrpContext.altrpdata = datasources
+
+    let {
+      content: title,
+      dictionary: titleDictionary,
+    } = await this.prepareContent(page.title, {
+      lang,
+    })
+    title = replaceContentWithData(title, altrpContext)
+    altrpContext.altrppage.title = title
+    altrpContext.altrppage.lang = lang
+    altrpContext.altrppage.is_dark =  html_class ? html_class.includes('altrp-theme_dark') : false
+
     try {
 
       let [page_areas, _all_styles, content] = await Promise.all(
@@ -338,9 +387,26 @@ export default class AltrpRouting {
           promisify(fs.readFile)(resource_path(`views/altrp/screens/${device}/pages/${page.guid}.html`), 'utf8'),
         ]
       )
-      let all_styles = `<link rel="stylesheet" href="/altrp/css/vars/altrp-vars.css"/>` + _all_styles
+
+      const _content = await this.prepareContent(content, {
+        lang,
+      })
+      const _page_areas = await this.prepareContent(page_areas, {
+        lang,
+      })
+
+      content = _content.content
+
+      _content.dictionary = _.merge(_content.dictionary, titleDictionary, _page_areas.dictionary)
+      const  dictionary = `<script id="altrp-dictionary">
+        /* <![CDATA[ */
+window.altrp_dictionary = ${JSON.stringify(_content.dictionary)};
+        /* ]]> */
+</script>`
+      let all_styles = _all_styles
       content = mustache.render(content, {
         ...altrpContext,
+        dictionary,
         altrpContext,
         access_classes,
         asCheck,
@@ -348,6 +414,7 @@ export default class AltrpRouting {
         user,
         csrfToken: httpContext.request.csrfToken,
         isProd: isProd(),
+        noProd: !isProd(),
         model_data: JSONStringifyEscape(model_data),
         route_args: JSONStringifyEscape(pageMatch.params),
         datasources: JSONStringifyEscape(datasources),
@@ -359,19 +426,22 @@ export default class AltrpRouting {
         spa_off: get_altrp_setting('spa_off') === 'true',
         device,
         lang,
-        altrptime: getAltrpTime()
+        html_class,
+        altrptime: getAltrpTime(),
       })
       mustache?.templateCache?.clear()
       // @ts-ignore
       content = content.replace('<<<page_areas>>>', page_areas)
       content = content.replace('<<<all_styles>>>', all_styles)
+      content = content.replace('<<<dictionary>>>', dictionary)
+
       let res = content
 
       /**
        * Add Custom Headers
        */
 
-      let customHeaders: string | object = get_altrp_setting('altrp_custom_headers', '', true)
+      let customHeaders: any = get_altrp_setting('altrp_custom_headers', '', true)
       if (customHeaders) {
         customHeaders = replaceContentWithData(customHeaders, altrpContext)
         customHeaders = stringToObject(customHeaders)
@@ -494,7 +564,8 @@ export default class AltrpRouting {
           version: getLatestVersion(),
           _altrp: {
             version: getLatestVersion(),
-            isNodeJS: true
+            isNodeJS: true,
+            isProd: isProd(),
           },
         })
       )
@@ -508,7 +579,7 @@ export default class AltrpRouting {
        * Add Custom Headers
        */
 
-      let customHeaders:string|object = get_altrp_setting('altrp_custom_headers', '', true)
+      let customHeaders:any = get_altrp_setting('altrp_custom_headers', '', true)
       if(customHeaders){
         customHeaders = replaceContentWithData(customHeaders, altrpContext)
         customHeaders = stringToObject(customHeaders)
@@ -548,7 +619,7 @@ export default class AltrpRouting {
       }
       font = encodeURIComponent(font);
       font += ':100,100italic,200,200italic,300,300italic,400,400italic,500,500italic,600,600italic,700,700italic,800,800italic,900,900italic'
-      let fontUrl = 'https://fonts.googleapis.com/css?family=' + font + '&subset=cyrillic';
+      let fontUrl = 'https://fonts.bunny.net/css?family=' + font + '&subset=cyrillic';
       fontUrl = '<link rel="stylesheet"  href="' + fontUrl + '" />'
       return fontUrl
     }).join('')
@@ -664,7 +735,6 @@ export default class AltrpRouting {
         }
       }
     }
-
   }
   async  extractElementsNames(areas: any[] = [], _only_react_elements = true){
     let elementNames = [];
@@ -686,4 +756,9 @@ export default class AltrpRouting {
 
     return elementNames;
   }
+
+  private async prepareContent(content: string,  { lang }): Promise<{content: string, dictionary: {  }}> {
+    return await translateContent(content,{lang})
+  }
 }
+

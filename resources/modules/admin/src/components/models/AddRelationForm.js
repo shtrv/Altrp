@@ -8,6 +8,10 @@ import {connect} from "react-redux";
 import getAltrpLang from "../../js/helpers/get-altrp-lang";
 
 const relationTypeOptions = [
+  // {
+  //   value: '',
+  //   label: 'Without Database Foreign Key'
+  // },
   {
     value: 'hasOne',
     label: 'Has One'
@@ -20,8 +24,16 @@ const relationTypeOptions = [
     value: 'hasMany',
     label: 'Has Many'
   },
+  {
+    value: 'manyToMany',
+    label: 'Many To Many'
+  },
 ];
 const deleteUpdateOptions = [
+  {
+    value: '',
+    label: 'Without Database Foreign Key'
+  },
   {
     value: 'cascade',
     label: 'cascade'
@@ -71,7 +83,14 @@ class AddRelationForm extends Component {
     let { options } = await this.modelsResource.getAll();
     //Модель может ссылаться на саму себя
     //options = options.filter(option=>(Number(option.value) !== Number(modelId)));
-    this.setState({ modelsOptions: options });
+
+    this.setState({ modelsOptions: [
+        {
+          label:'User',
+          value: 'User',
+        },
+      ...options,
+      ] });
     let fields = await (new Resource({route: `/admin/ajax/models/${this.props.modelId}/fields`})).getAll();
     let selfFieldsOptions = fields.map(field=>({
       label: field.title,
@@ -83,6 +102,11 @@ class AddRelationForm extends Component {
       this.relationName = value.name;
       this.updateForeignFieldOptions(value.target_model_id);
       this.changeTargetModel(value.target_model_id);
+      value.onUpdate = value.on_update
+      value.onDelete = value.on_delete
+      if(value.settings?.core_relation?.model){
+        value.target_model_id = value.settings?.core_relation?.model
+      }
       this.setState(state=>({...state, value}));
     }
   }
@@ -98,9 +122,6 @@ class AddRelationForm extends Component {
 
 
   /**
-   * Проверяем значение при смене модели
-   * если модель это User, то скроем Add Reverse Relation
-   * и уберем из вариантов связей Has many
    * @param {string} value
    */
   changeTargetModel(value) {
@@ -147,6 +168,7 @@ class AddRelationForm extends Component {
       }
       if(field === 'target_model_id'){
         this.updateForeignFieldOptions(value)
+        state.value.type = 'belongsTo'
       }
       return state
     })
@@ -171,6 +193,14 @@ class AddRelationForm extends Component {
   async submitHandler(e) {
     e.preventDefault();
     const data = this.state.value;
+    if(data.target_model_id === 'User'){
+      data.settings = data.settings || {}
+
+      data.settings.core_relation = data.settings.core_relation || {}
+
+      data.settings.core_relation.model= 'User'
+      delete data.target_model_id
+    }
     const isNameTaken = !this.props.modelRelationID || this.relationName !== data.name ?
       await fetch(`/admin/ajax/models/${this.props.modelId}/relation_name_is_free/?name=${data.name}`)
         .then(res => res.json())
@@ -237,7 +267,7 @@ class AddRelationForm extends Component {
   }
 
 /**
-   * вывод поля Foreign Key
+   *  Foreign Key
    */
   renderForeignKey(){
 
@@ -269,9 +299,11 @@ class AddRelationForm extends Component {
                 />
               }}
               onItemSelect={current => { this.changeValue(current.value, 'foreign_key') }}
+              disabled={ this.state.value?.target_model_id === 'User'}
               fill={true}
       >
         <Button fill
+                disabled={ this.state.value?.target_model_id === 'User'}
                 large
                 alignText={Alignment.LEFT}
                 text={this.state.foreignFieldsOptions.find(item => (item.value === this.state.value.foreign_key))?.label || 'none'}
@@ -335,47 +367,6 @@ class AddRelationForm extends Component {
         </div>
 
       <div className="form-group__inline-wrapper flex-grow__selectBlueprint">
-        <div className="form-group form-group_width47">
-          <label htmlFor="relation-type">Relation Type</label>
-          {/*<select id="relation-type" required disabled={id}*/}
-          {/*  value={this.state.value.type}*/}
-          {/*  onChange={e => { this.changeValue(e.target.value, 'type') }}*/}
-          {/*  className="form-control"*/}
-          {/*>*/}
-          {/*  <option disabled value="" />*/}
-          {/*  {this.state.relationTypeOptions.map(item =>*/}
-          {/*    <option key={item.value} value={item.value}>*/}
-          {/*      {item.label}*/}
-          {/*    </option>)}*/}
-          {/*</select>*/}
-
-
-          <Select items={relationTypeOptions}
-                  disabled={this.props.modelRelationID}
-                  matchTargetWidth
-                  itemPredicate={this.ItemPredicate}
-                  noResults={<MenuItem disabled={true} text="No results." />}
-                  itemRenderer={(item, {handleClick, modifiers, query}) => {
-                    return <MenuItem
-                      text={item.label}
-                      key={item.value}
-                      active={item.value === this.state.value.type }
-                      onClick={handleClick}
-                    />
-                  }}
-                  onItemSelect={current => { this.changeValue(current.value, 'type') }}
-                  fill={true}
-          >
-            <Button disabled={this.props.modelRelationID}
-                    fill
-                    large
-                    alignText={Alignment.LEFT}
-                    text={relationTypeOptions.find(item => (item.value === this.state.value.type))?.label}
-                    rightIcon="caret-down"
-            />
-          </Select>
-        </div>
-
         <div className="form-group overflow-select__blueprint form-group_width47">
           <label htmlFor="relation-model_id">Model to Bound</label>
           {/*<select id="relation-model_id" required*/}
@@ -394,19 +385,25 @@ class AddRelationForm extends Component {
                   required
                   matchTargetWidth
                   itemPredicate={this.ItemPredicate}
+                  popoverProps={{
+
+                  }}
+                  disabled={this.props.modelRelationID}
+
                   noResults={<MenuItem disabled={true} text="No results." />}
                   itemRenderer={(item, {handleClick, modifiers, query}) => {
                     return <MenuItem
-                          text={item.label}
-                          key={item.value}
-                          active={item.value === this.state.value.target_model_id }
-                          onClick={handleClick}
-                        />
+                      text={item.label}
+                      key={item.value}
+                      active={item.value === this.state.value.target_model_id }
+                      onClick={handleClick}
+                    />
                   }}
                   onItemSelect={current => { this.changeValue(current.value, 'target_model_id') }}
                   fill={true}
           >
             <Button fill
+                    disabled={this.props.modelRelationID }
                     large
                     alignText={Alignment.LEFT}
                     text={this.state.modelsOptions.find(item => (item.value === this.state.value.target_model_id))?.label || 'none'}
@@ -414,25 +411,66 @@ class AddRelationForm extends Component {
             />
           </Select>
         </div>
+        <div className="form-group form-group_width47">
+          <label htmlFor="relation-type">Relation Type</label>
+          {/*<select id="relation-type" required disabled={id}*/}
+          {/*  value={this.state.value.type}*/}
+          {/*  onChange={e => { this.changeValue(e.target.value, 'type') }}*/}
+          {/*  className="form-control"*/}
+          {/*>*/}
+          {/*  <option disabled value="" />*/}
+          {/*  {this.state.relationTypeOptions.map(item =>*/}
+          {/*    <option key={item.value} value={item.value}>*/}
+          {/*      {item.label}*/}
+          {/*    </option>)}*/}
+          {/*</select>*/}
+
+
+          <Select items={relationTypeOptions}
+                  disabled={this.props.modelRelationID || this.state.value?.target_model_id === 'User'}
+                  matchTargetWidth
+                  itemPredicate={this.ItemPredicate}
+                  noResults={<MenuItem disabled={true} text="No results." />}
+                  itemRenderer={(item, {handleClick, modifiers, query}) => {
+                    return <MenuItem
+                      text={item.label}
+                      key={item.value}
+                      active={item.value === this.state.value.type }
+                      onClick={handleClick}
+                    />
+                  }}
+                  onItemSelect={current => { this.changeValue(current.value, 'type') }}
+                  fill={true}
+          >
+            <Button disabled={this.props.modelRelationID || this.state.value?.target_model_id === 'User'}
+                    fill
+                    large
+                    alignText={Alignment.LEFT}
+                    text={relationTypeOptions.find(item => (item.value === this.state.value.type))?.label}
+                    rightIcon="caret-down"
+            />
+          </Select>
+        </div>
+
       </div>
       <div className="relations__checkbox">
-        <div className="form-group">
-          {this.state.hideAddBelongTo || this.state.value.type === 'belongsTo' ? '' : <><input type="checkbox" id="relation-add_belong_to"
-            checked={this.state.value.add_belong_to} readOnly={this.props.modelRelationID}
-            onChange={e => { this.changeValue(e.target.checked, 'add_belong_to') }}
-          />
-          <label className="checkbox-label" htmlFor="relation-add_belong_to">Add Reverse Relation</label></>}
-        </div>
-        <div className="form-group">
-          { (! ['hasMany', 'belongsTo'].includes(this.state.value.type)) ?
-              <><input type="checkbox"
-                       id="field-editable"
-                       checked={this.state.value.editable}
-                       onChange={e => { this.changeValue(e.target.checked, 'editable') }}
-          />
-            <label className="checkbox-label" htmlFor="field-editable">Editable</label></> : ''}
+        {/*<div className="form-group">*/}
+        {/*  {this.state.hideAddBelongTo || this.state.value.type === 'belongsTo' ? '' : <><input type="checkbox" id="relation-add_belong_to"*/}
+        {/*    checked={this.state.value.add_belong_to} readOnly={this.props.modelRelationID}*/}
+        {/*    onChange={e => { this.changeValue(e.target.checked, 'add_belong_to') }}*/}
+        {/*  />*/}
+        {/*  <label className="checkbox-label" htmlFor="relation-add_belong_to">Add Reverse Relation</label></>}*/}
+        {/*</div>*/}
+        {/*<div className="form-group">*/}
+        {/*  { (! ['hasMany', 'belongsTo'].includes(this.state.value.type)) ?*/}
+        {/*      <><input type="checkbox"*/}
+        {/*               id="field-editable"*/}
+        {/*               checked={this.state.value.editable}*/}
+        {/*               onChange={e => { this.changeValue(e.target.checked, 'editable') }}*/}
+        {/*  />*/}
+        {/*    <label className="checkbox-label" htmlFor="field-editable">Editable</label></> : ''}*/}
 
-        </div>
+        {/*</div>*/}
         <div className="form-group">
           {
             getAltrpLang() === 'javascript'
@@ -456,7 +494,7 @@ class AddRelationForm extends Component {
         {this.renderForeignKey()}
       </div>
 
-      <div className="form-group__inline-wrapper">
+      {this.state.value?.type !=='manyToMany' && <div className="form-group__inline-wrapper">
         <div className="form-group flex-grow__selectBlueprint form-group_width47">
           <label htmlFor="onDelete">On Delete</label>
           {/*<select id="onDelete" required*/}
@@ -477,22 +515,24 @@ class AddRelationForm extends Component {
                   id="onDelete"
                   matchTargetWidth
                   itemPredicate={this.ItemPredicate}
-                  noResults={<MenuItem disabled={true} text="No results." />}
+                  noResults={<MenuItem disabled={true} text="No results."/>}
                   itemRenderer={(item, {handleClick, modifiers, query}) => {
                     return <MenuItem
                       text={item.label}
                       key={item.value}
-                      active={item.value === this.state.value.onDelete }
+                      active={item.value === this.state.value.onDelete}
                       onClick={handleClick}
                     />
                   }}
-                  onItemSelect={current => { this.changeValue(current.value, 'onDelete') }}
+                  onItemSelect={current => {
+                    this.changeValue(current.value, 'onDelete')
+                  }}
                   fill={true}
           >
             <Button fill
                     large
                     alignText={Alignment.LEFT}
-                    text={this.state.value.onDelete}
+                    text={this.state.value.onDelete || 'Without Database Foreign Key'}
                     rightIcon="caret-down"
             />
           </Select>
@@ -533,12 +573,12 @@ class AddRelationForm extends Component {
             <Button fill
                     large
                     alignText={Alignment.LEFT}
-                    text={this.state.value.onUpdate}
+                    text={this.state.value.onUpdate || 'Without Database Foreign Key'}
                     rightIcon="caret-down"
             />
           </Select>
         </div>
-      </div>
+      </div>}
 
        <div className="btn__wrapper btn__wrapper-relations">
         <button className="btn btn_success" type="submit">Add</button>

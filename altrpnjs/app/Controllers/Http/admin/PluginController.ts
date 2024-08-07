@@ -125,7 +125,7 @@ export default class PluginController {
 
     } catch (e) {
       res = {
-        axios_response: e.response,
+        //axios_response: e.response,
         'success': false,
         'message': e.response.data.toString(),
         'trace': e.stack.split('\n'),
@@ -147,6 +147,7 @@ export default class PluginController {
     let plugin = new Plugin({'name': request.input('name'),})
     await plugin.updatePluginSettings()
     plugin.copyStaticFiles()
+    await plugin.callUpdateHooks()
     return response.json(res)
   }
 

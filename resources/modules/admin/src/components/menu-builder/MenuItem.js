@@ -24,6 +24,7 @@ class MenuItem extends Component {
           <input type="text"
                  className="form-control"
                  id={`${this.props.indexes.join('.')}.label`}
+                 placeholder="label"
                  onChange={(e) => {
                    let value = e.target.value;
                    let path = this.props.indexes.map(((index) => {
@@ -32,9 +33,10 @@ class MenuItem extends Component {
                    this.props.updateValue(value, path)
                  }}
                  value={this.props.item.label}/>
-          <label htmlFor={`${this.props.indexes.join('.')}.url`} className="form-label">URL</label>
+          <label htmlFor={`${this.props.indexes.join('.')}.url`} className="form-label">URL or Dispatch Event</label>
           <input type="text"
                  className="form-control"
+                 placeholder={`Url or Event Name`}
                  id={`${this.props.indexes.join('.')}.url`}
                  onChange={(e) => {
                    let value = e.target.value;
@@ -58,17 +60,17 @@ class MenuItem extends Component {
                  }}
                  value={this.props.item.modelField}/>
           <AltrpSelect id={`${this.props.indexes.join('.')}.operator`}
-                 className="altrp-menu-item__select"
-                 onChange={(e) => {
-                   let value = e?.value || '';
-                   let path = this.props.indexes.map(((index) => {
-                     return `children.${index}`;
-                   })).join('.') + '.operator'
-                   this.props.updateValue(value, path)
-                 }}
-                 isClearable={true}
-                 options={CONDITIONS_OPTIONS}
-                 value={this.props.item.operator}/>
+                       className="altrp-menu-item__select"
+                       onChange={(e) => {
+                         let value = e?.value || '';
+                         let path = this.props.indexes.map(((index) => {
+                           return `children.${index}`;
+                         })).join('.') + '.operator'
+                         this.props.updateValue(value, path)
+                       }}
+                       isClearable={true}
+                       options={CONDITIONS_OPTIONS}
+                       value={this.props.item.operator}/>
           <input type="text"
                  className="form-control"
                  placeholder="value"
@@ -81,8 +83,45 @@ class MenuItem extends Component {
                    this.props.updateValue(value, path)
                  }}
                  value={this.props.item.value}/>
+          <label className="form-label">Display Condition:</label>
+          <input type="text"
+                 className="form-control"
+                 placeholder="path"
+                 id={`${this.props.indexes.join('.')}.disField`}
+                 onChange={(e) => {
+                   let value = e.target.value;
+                   let path = this.props.indexes.map(((index) => {
+                     return `children.${index}`;
+                   })).join('.') + '.disField'
+                   this.props.updateValue(value, path)
+                 }}
+                 value={this.props.item.disField}/>
+          <AltrpSelect id={`${this.props.indexes.join('.')}.disOperator`}
+                       className="altrp-menu-item__select"
+                       onChange={(e) => {
+                         let value = e?.value || '';
+                         let path = this.props.indexes.map(((index) => {
+                           return `children.${index}`;
+                         })).join('.') + '.disOperator'
+                         this.props.updateValue(value, path)
+                       }}
+                       isClearable={true}
+                       options={CONDITIONS_OPTIONS}
+                       value={this.props.item.disOperator}/>
+          <input type="text"
+                 className="form-control"
+                 placeholder="value"
+                 id={`${this.props.indexes.join('.')}.disValue`}
+                 onChange={(e) => {
+                   let value = e.target.value;
+                   let path = this.props.indexes.map(((index) => {
+                     return `children.${index}`;
+                   })).join('.') + '.disValue'
+                   this.props.updateValue(value, path)
+                 }}
+                 value={this.props.item.disValue}/>
           <label htmlFor={`${this.props.indexes.join('.')}.icon`} className="form-label">Icon</label>
-          <button
+          {this.props.item.icon && <button
             onClick={() => {
               let value = '';
               let path = this.props.indexes.map(((index) => {
@@ -91,7 +130,7 @@ class MenuItem extends Component {
               this.props.updateValue(value, path)
             }}
             className="btn btn_link text-danger fs-2 altrp-menu-item__delete">delete Icon
-          </button>
+          </button>}
           <IconSelect
             value={this.props.item.icon}
             returnType="text"

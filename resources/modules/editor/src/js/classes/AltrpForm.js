@@ -106,6 +106,7 @@ class AltrpForm {
     customHeaders = null,
     emptyFieldMessage ,
   ) {
+    //this.updateResponseStorage('pending'); todo: merge {"__altrp_status": "pending"} with current data
     let success = true;
     if (submitText) {
       let confirmed = await confirm(submitText);
@@ -244,7 +245,7 @@ class AltrpForm {
    */
   getData() {
     let data = { altrp_ajax: true };
-
+    const dataFromStorage = altrpHelpers.getDataByPath(`altrpforms.${this.formId}`)
     if (this.modelName === "email") {
       let userMessage = "";
       let subject = "Altrp Email";
@@ -254,6 +255,8 @@ class AltrpForm {
           subject = b.getSettings("email_subject");
         }
       });
+
+
       this.fields.forEach(field => {
         if (field.getValue() !== null) {
           let fieldLabel =
@@ -282,8 +285,10 @@ class AltrpForm {
         }
       });
     }
-
-    return data;
+    return {
+      ...dataFromStorage,
+      ...data,
+    };
   }
 
   /**

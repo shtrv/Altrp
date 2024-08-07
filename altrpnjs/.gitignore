@@ -16,11 +16,13 @@ public/*
 storage/
 app/AltrpModels/
 app/AltrpControllers/
+app/AltrpGlobalMiddlewares/
 app/AltrpPlugins/
 app/AltrpListeners/
 app/AltrpOther/
 app/AltrpCRUDs/
 app/AltrpSchedules/
+app/AltrpHelpers/
 start/altrp-routes/
 start/routes/custom
 /resources/views/altrp

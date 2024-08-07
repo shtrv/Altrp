@@ -15,6 +15,7 @@ import {connect} from "react-redux";
 import progressBar from "../js/functions/progressBar";
 import delay from "../../../front-app/src/js/functions/delay";
 import Pagination from "./Pagination";
+import {setCurrentPage} from "../js/store/current-page/actions";
 
 const columns = [
   {
@@ -54,8 +55,10 @@ class SettingPage extends Component {
         path: "",
         redirect: "",
         roles: [],
+        permissions: [],
         rolesOptions: [{value: "guest", label: "Guest"}],
         title: "",
+        permissionsOptions: [],
         _categories: [],
         categories: [],
         not_found: null
@@ -75,6 +78,7 @@ class SettingPage extends Component {
     };
     this.resource = new Resource({route: "/admin/ajax/pages"});
     this.rolesOptionsResource = new Resource({route: "/admin/ajax/role_options"})
+    this.permissionsOptionsResource = new Resource({route: "/admin/ajax/permissions_options"})
     this.categoryOptions = new Resource({route: "/admin/ajax/category/options"})
     this.pagesOptionsResource = new Resource({
       route: "/admin/ajax/pages_options"
@@ -102,17 +106,17 @@ class SettingPage extends Component {
     this.setState(state=>({...state, relationsOptions}))
   }
 
+  componentWillUnmount() {
+    console.log(this)
+    this.props.dispatch(setCurrentPage(null))
+  }
+
   getData = async () => {
     let res = await this.templateResource.getOptions();
     this.setState(state => {
       return {...state, templates: res};
     });
 
-    const {data} = await this.categoryOptions.getAll();
-    this.setState(state => ({
-      ...state,
-      categoryOptions: data
-    }))
 
     // let [ getModels ] = await this.model_resource.getAll();
     const models_res = (await this.model_resource.getAll()).options
@@ -141,11 +145,24 @@ class SettingPage extends Component {
       });
     }
 
-    let roles = await this.rolesOptionsResource.getAll();
+    let [
+      roles,
+      permissionsOptions,
+      data,
+    ] = await Promise.all([
+      this.rolesOptionsResource.getAll(),
+      this.permissionsOptionsResource.getQueried({
+        value: 'name',
+      }),
+      this.categoryOptions.getAll(),
+    ]);
+
     this.setState(state => ({
       ...state,
       value: {
         ...state.value,
+        categoryOptions: data,
+        permissionsOptions,
         rolesOptions: [...state.value.rolesOptions, ...roles]
       }
     }));
@@ -155,6 +172,7 @@ class SettingPage extends Component {
     if (id) {
       this.getDataSources();
       let pageData = await this.resource.get(id);
+      this.props.dispatch(setCurrentPage(pageData))
       this.setState(state => {
         return {
           ...state,
@@ -164,7 +182,8 @@ class SettingPage extends Component {
             parent_page_id: pageData.parent_page_id,
             path: pageData.path,
             redirect: pageData.redirect,
-            roles: pageData.roles,
+            roles: pageData.roles || [],
+            permissions: pageData.permissions || [],
             title: pageData.title,
             _categories: pageData.categories,
             categories: pageData.categories,
@@ -180,7 +199,7 @@ class SettingPage extends Component {
     }
 
     if (id) {
-      let pagesOptions = await this.pagesOptionsResource.getAll()
+      let pagesOptions = await this.pagesOptionsResource.getQueried({with_id: true})
       let pageData = await this.resource.get(id);
       let pageAll = await this.resource.getAll();
       let parentPage = pageAll.find(item => item.parent_page_id === pageData.id)
@@ -212,7 +231,7 @@ class SettingPage extends Component {
       }
 
     } else {
-      let pagesOptions = await this.pagesOptionsResource.getAll()
+      let pagesOptions = await this.pagesOptionsResource.getQueried({with_id: true})
 
       this.setState({
         pagesOptions: [
@@ -245,6 +264,7 @@ class SettingPage extends Component {
         value: {
           ...state.value,
           roles: [],
+          permissions: [],
           rolesOptions: [{value: "guest", label: "Guest"}],
         }
       }))
@@ -465,12 +485,14 @@ class SettingPage extends Component {
   };
 
   tagRenderer = (item) => {
-    console.log(item.label);
     return item.label;
   };
 
   isItemSelectedRoles = (item) => {
     return this.state.value.roles.some(c => c.value === item.value);
+  };
+  isItemSelectedPermissions= (item) => {
+    return this.state.value.permissions.some(c => c.value === item.value);
   };
   isItemSelectedRelations = (item) => {
     const modelRelations = _.get(this, 'state.value.settings.modelRelations', [])
@@ -499,6 +521,17 @@ class SettingPage extends Component {
       }));
     }
   };
+  handleItemSelectPermissions = (item) => {
+    if (!this.isItemSelectedPermissions(item)) {
+      this.setState(state => ({
+        ...state,
+        value: {
+          ...state.value,
+          permissions: [...state.value.permissions, item]
+        },
+      }));
+    }
+  };
 
   handleTagRemoveRoles = (item) => {
     this.setState(state => ({
@@ -506,6 +539,15 @@ class SettingPage extends Component {
       value: {
         ...state.value,
         roles: [...state.value.roles].filter((i) => i.label !== item)
+      },
+    }));
+  };
+  handleTagRemovePermissions = (item) => {
+    this.setState(state => ({
+      ...state,
+      value: {
+        ...state.value,
+        permissions: [...state.value.permissions].filter((i) => i.label !== item)
       },
     }));
   };
@@ -578,6 +620,7 @@ class SettingPage extends Component {
 
   render() {
     const {isModalOpened, editingDataSource} = this.state;
+    const permissionsOptions = this.state.value?.permissionsOptions || []
     let {dataSources} = this.state;
     let id = this.props.id
     dataSources = _.sortBy(dataSources, dataSource => dataSource.priority);
@@ -814,10 +857,46 @@ class SettingPage extends Component {
                           </div>
 
                           <div
+                            className="form-group form-group__multiSelectBlueprint form-group__multiSelectBlueprint-pages form-group_width47">
+                            <label htmlFor="page-roles" className="font__edit">Permissions</label>
+
+                            <MultiSelect tagRenderer={this.tagRenderer}
+                                         id="permission"
+                                         items={permissionsOptions}
+                                         itemPredicate={this.onQueryChange}
+                                         noResults={<MenuItem disabled={true} text="No results."/>}
+                                         fill={true}
+                                         placeholder="All..."
+                                         selectedItems={permissionsOptions.filter(i => this.isItemSelectedPermissions(i))}
+                                         onItemSelect={this.handleItemSelectPermissions}
+                                         itemRenderer={(item, {handleClick, modifiers, query}) => {
+                                           return (
+                                             <MenuItem
+                                               icon={this.isItemSelectedPermissions(item) ? "tick" : "blank"}
+                                               text={item.label}
+                                               key={item.value}
+                                               onClick={handleClick}
+                                             />
+                                           )
+                                         }}
+                                         tagInputProps={{
+                                           onRemove: this.handleTagRemovePermissions,
+                                           large: false,
+                                         }}
+                                         popoverProps={{
+                                           usePortal: false
+                                         }}
+                            />
+                          </div>
+
+                        </div>
+
+                        <div className="form-group__inline-wrapper">
+                          <div
                             className="form-group form-group_width47 form-group__multiSelectBlueprint form-group__multiSelectBlueprint-pages">
                             <label htmlFor="categories-pages" className="font__edit">Categories</label>
                             <MultiSelect tagRenderer={this.tagRenderer} id="categories"
-                                         items={this.state.categoryOptions}
+                                         items={this.state?.value?.categoryOptions?.data || []}
                                          itemPredicate={this.onQueryChangeMulti}
                                          noResults={<MenuItem disabled={true} text="No results."/>}
                                          fill={true}
@@ -843,9 +922,7 @@ class SettingPage extends Component {
                                          }}
                             />
                           </div>
-                        </div>
 
-                        <div className="form-group__inline-wrapper">
                           <div className="form-group form-group_width47">
                             <label htmlFor="redirect" className="font__edit">Redirect</label>
 
@@ -859,6 +936,9 @@ class SettingPage extends Component {
                                         className="form-control-blueprint"
                             />
                           </div>
+                        </div>
+                        <div className="form-group__inline-wrapper">
+
                           <div className="addPage__bottom">
                             <div className="addPage__bottom-block">
                               <label style={{marginBottom: 0, marginRight: '16px'}}>

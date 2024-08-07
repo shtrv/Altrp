@@ -15,7 +15,7 @@ import {
  * @returns {String} CSS style string
  */
 const inputWrapperStyle = settings => {
-  let styles = `&& .altrp-input-wrapper {`;
+  let styles = `& .altrp-input-wrapper.altrp-input-wrapper {`;
   let width;
   //width begin
   settings && (width = getResponsiveSetting(settings, "field_width"));
@@ -31,7 +31,7 @@ const inputWrapperStyle = settings => {
  * @returns {String} CSS style string
  */
 const containerStyle = settings => {
-  let styles = `&& .altrp-field-container {`;
+  let styles = `& .altrp-field-container.altrp-field-container {`;
   let margin;
 
   //margin begin
@@ -61,7 +61,7 @@ const fieldStyle = settings => {
     cross_size
   } = settings;
 
-  let styles = `&& .altrp-field, && .altrp-field-checkbox .bp3-control-indicator {`;
+  let styles = `& .altrp-field.altrp-field, & .altrp-field-checkbox.altrp-field-checkbox .bp3-control-indicator {`;
   let padding,
     color,
     typographic,
@@ -171,15 +171,13 @@ const fieldStyle = settings => {
 
 
   //checkbox .active
+  styles += `}
+  & .altrp-field-checkbox.altrp-field-checkbox .input::checked ~ .bp3-control-indicator {`;
 
-  settings && (size = getResponsiveSetting(settings, "field_size", ".active"));
-  size && (styles += `height:${sliderStyled(size)};width:${sliderStyled(size)};`);
 
   settings && (boxShadow = getResponsiveSetting(settings, "box_shadow", ".active"));
   boxShadow && (styles += shadowControllerToStyles(boxShadow));
 
-  settings && (padding = getResponsiveSetting(settings, "position_padding", ".active"));
-  padding && (styles += dimensionsControllerToStyles(padding, "padding"));
 
   settings && (borderType = getResponsiveSetting(settings, "border_type", ".active"));
   borderType &&
@@ -204,18 +202,16 @@ const fieldStyle = settings => {
     settings,
     "background_style_background_color", ".active"
   ));
+  styles += `}
+  & .altrp-field-checkbox.altrp-field-checkbox input:checked ~ .bp3-control-indicator::before {`;
   backgroundColor &&
   (styles += colorPropertyStyled(backgroundColor, "background-color"));
 
-  placeholder_and_value_alignment_position_section &&
-  (styles += `text-align:${placeholder_and_value_alignment_position_section};`);
-
-  position_z_index && (styles += `z-index:${position_z_index};`);
 
   styles += "}";
   // end of state active setting
 
-  styles += `&& .altrp-field, && .altrp-field-checkbox .bp3-control-indicator:before {`;
+  styles += `& .altrp-field.altrp-field, & .altrp-field-checkbox.altrp-field-checkbox .bp3-control-indicator:before {`;
 
 
   // settings &&
@@ -239,7 +235,7 @@ const fieldStyle = settings => {
 
   styles += "}";
 
-  styles += `&& .altrp-field-radio-group {`;
+  styles += `& .altrp-field-radio-group.altrp-field-radio-group {`;
 
   let fieldAlignment;
 
@@ -248,7 +244,7 @@ const fieldStyle = settings => {
 
   styles += "}";
 
-  styles += "&& .altrp-field-option:hover span.bp3-control-indicator.bp3-control-indicator {";
+  styles += "& .altrp-field-option.altrp-field-option:hover span.bp3-control-indicator.bp3-control-indicator {";
 
   let backgroundColorHover;
 
@@ -263,7 +259,7 @@ const fieldStyle = settings => {
 
   styles += "}";
 
-  styles += "&& .altrp-field-option label.altrp-field-option__label {";
+  styles += "& .altrp-field-option.altrp-field-option label.altrp-field-option__label {";
 
   let fontTypographic;
 
@@ -278,7 +274,7 @@ const fieldStyle = settings => {
 
   styles += "}";
 
-  styles += "&& .altrp-field-option:hover label.altrp-field-option__label {";
+  styles += "& .altrp-field-option.altrp-field-option:hover label.altrp-field-option__label {";
 
   let fontTypographicHover;
 
@@ -293,7 +289,7 @@ const fieldStyle = settings => {
 
   styles += "}";
 
-  styles += "&& .altrp-field-option.active label.altrp-field-option__label {";
+  styles += "& .altrp-field-option.altrp-field-option.active label.altrp-field-option__label {";
 
   let fontTypographicActive;
 
@@ -308,7 +304,7 @@ const fieldStyle = settings => {
 
   styles += "}";
 
-  styles += "&& .altrp-field-option.active span.bp3-control-indicator.bp3-control-indicator   {";
+  styles += "& .altrp-field-option.altrp-field-option.active span.bp3-control-indicator.bp3-control-indicator   {";
 
   let backgroundColorActive;
 
@@ -324,13 +320,13 @@ const fieldStyle = settings => {
   styles += "}";
 
 
-  styles += "&& .altrp-image-select{";
+  styles += "& .altrp-image-select.altrp-image-select{";
 
   justify_options && (styles += `justify-content:${justify_options};`);
 
   styles += "}";
 
-  styles += "&& .altrp-image-select>.altrp-field{";
+  styles += "& .altrp-image-select.altrp-image-select>.altrp-field{";
 
   image_select_item_width &&
   (styles += `width:${image_select_item_width.size}${image_select_item_width.unit};`);
@@ -340,13 +336,13 @@ const fieldStyle = settings => {
 
   styles += "}";
 
-  styles += "&& .altrp-image-select img{";
+  styles += "& .altrp-image-select.altrp-image-select img{";
   image_select_image_fit && (styles += `object-fit:${image_select_image_fit};`);
   image_select_image_position &&
   (styles += `object-position:${image_select_image_position};`);
   styles += "}";
 
-  styles += "&& .input-clear-btn{";
+  styles += "& .input-clear-btn.input-clear-btn{";
 
   settings && (color = getResponsiveSetting(settings, "cross_color"));
   color && (styles += colorPropertyStyled(color, "color"));
@@ -367,7 +363,7 @@ const fieldStyle = settings => {
  * @returns {String} CSS style string
  */
 const fieldStyleHover = settings => {
-  let styles = `&& .altrp-field, && .altrp-field-option:hover .altrp-field-checkbox .bp3-control-indicator {`;
+  let styles = `& .altrp-field.altrp-field, & .altrp-field-option.altrp-field-option:hover .altrp-field-checkbox .bp3-control-indicator {`;
   let backgroundColor,
     borderType,
     borderWidth,
@@ -423,7 +419,7 @@ const fieldStyleHover = settings => {
 };
 
 const fieldStyleActive = settings => {
-  let styles = `&& .altrp-field, && .altrp-field-option.active .altrp-field-checkbox .bp3-control-indicator {`;
+  let styles = `& .altrp-field.altrp-field, & .altrp-field-option.altrp-field-option.active .altrp-field-checkbox .bp3-control-indicator {`;
   let backgroundColor,
     borderType,
     borderWidth,
@@ -484,7 +480,7 @@ const fieldStyleActive = settings => {
  * @returns {String} CSS style string
  */
 const fieldStyleFocus = settings => {
-  let styles = `&& .altrp-field:focus, && .bp3-input:focus {`;
+  let styles = `& .altrp-field.altrp-field:focus, & .bp3-input.bp3-input:focus {`;
   let padding,
     color,
     typographic,
@@ -532,7 +528,7 @@ const fieldStyleFocus = settings => {
   backgroundColor &&
   (styles += colorPropertyStyled(backgroundColor, "background-color"));
 
-  styles += "&& .input-clear-btn{";
+  styles += "& .input-clear-btn.input-clear-btn{";
 
   settings && (color = getResponsiveSetting(settings, "cross_color", ":focus"));
   color && (styles += colorPropertyStyled(color, "color"));
@@ -552,7 +548,7 @@ const fieldStyleFocus = settings => {
  * @returns {String} CSS style string
  */
 const imageSelectLabel = settings => {
-  let styles = `&& .altrp-image-select__label {`;
+  let styles = `& .altrp-image-select__label.altrp-image-select__label {`;
   let color, typographic;
 
   const { placeholder_and_value_alignment_position_section } = settings;
@@ -576,7 +572,7 @@ const imageSelectLabel = settings => {
  * @returns {String} CSS style string
  */
 const fieldSelect2SingleValueStyle = settings => {
-  let styles = `&& .altrp-field-select2__single-value {`;
+  let styles = `& .altrp-field-select2__single-value.altrp-field-select2__single-value {`;
   let typographic, color;
 
   settings &&
@@ -595,7 +591,7 @@ const fieldSelect2SingleValueStyle = settings => {
  * @returns {String} CSS style string
  */
 const fieldLabelContainerStyle = settings => {
-  let styles = `&& .altrp-field-label-container {`;
+  let styles = `& .altrp-field-label-container.altrp-field-label-container {`;
   let backgroundColor, padding, width;
   const {
     label_position_top,
@@ -623,7 +619,7 @@ const fieldLabelContainerStyle = settings => {
 
   styles += "}";
 
-  styles += `&& .altrp-field-container:hover .altrp-field-label-container {`
+  styles += `& .altrp-field-container.altrp-field-container:hover .altrp-field-label-container {`
 
   settings &&
     (backgroundColor = getResponsiveSetting(
@@ -667,7 +663,7 @@ const fieldLabel = settings => {
  * @returns {String} CSS style string
  */
 const labelIconStyle = settings => {
-  let styles = `&& .altrp-label-icon {`;
+  let styles = `& .altrp-label-icon.altrp-label-icon {`;
   let padding, backgroundColor, iconSize;
 
   settings && (padding = getResponsiveSetting(settings, "icon_padding"));
@@ -679,14 +675,14 @@ const labelIconStyle = settings => {
 
   styles += "}";
   //for path
-  styles += `&& .altrp-label-icon path{`;
+  styles += `& .altrp-label-icon.altrp-label-icon path{`;
 
   settings && (backgroundColor = getResponsiveSetting(settings, "icon_color"));
   backgroundColor && (styles += colorPropertyStyled(backgroundColor, "fill"));
 
   styles += "}";
   //for svg
-  styles += `&& .altrp-label-icon svg{`;
+  styles += `& .altrp-label-icon.altrp-label-icon svg{`;
 
   settings &&
   (backgroundColor = getResponsiveSetting(settings, "icon_color_background"));
@@ -697,7 +693,7 @@ const labelIconStyle = settings => {
 
   styles += "}";
   //for img
-  styles += `&& .altrp-label-icon img{`;
+  styles += `& .altrp-label-icon.altrp-label-icon img{`;
 
   iconSize &&
   (styles += `width:${iconSize.size}${iconSize.unit};height:${iconSize.size}${iconSize.unit};`);
@@ -714,7 +710,7 @@ const labelIconStyle = settings => {
  * @returns {String} CSS style string
  */
 const placeholderStyle = settings => {
-  let styles = `&& .altrp-field, && .bp3-input::placeholder{`;
+  let styles = `& .altrp-field.altrp-field, & .bp3-input.bp3-input::placeholder{`;
   let color,
     typographic,
     backgroundColor,
@@ -745,7 +741,7 @@ const placeholderStyle = settings => {
 
   styles += "}";
 
-  styles += `&& .altrp-field-select2__placeholder{`;
+  styles += `& .altrp-field-select2__placeholder.altrp-field-select2__placeholder{`;
 
   settings &&
   (backgroundColor = getResponsiveSetting(
@@ -761,7 +757,7 @@ const placeholderStyle = settings => {
 
   styles += "}";
 
-  styles += `&& .altrp-field-file__placeholder{`;
+  styles += `& .altrp-field-file__placeholder.altrp-field-file__placeholder{`;
 
   settings && (boxShadow = getResponsiveSetting(settings, "box_shadow"));
   boxShadow && (styles += shadowControllerToStyles(boxShadow));
@@ -813,7 +809,7 @@ const placeholderStyle = settings => {
  * @returns {String} CSS style string
  */
 const fieldLabelRequired = settings => {
-  let styles = `&& .altrp-field-label--required::after{`;
+  let styles = `& .altrp-field-label--required.altrp-field-label--required::after{`;
   let color, typographic;
 
   settings &&

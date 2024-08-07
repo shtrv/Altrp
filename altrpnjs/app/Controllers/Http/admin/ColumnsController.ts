@@ -5,6 +5,7 @@ import Event from '@ioc:Adonis/Core/Event'
 import Column from "App/Models/Column";
 import Database from "@ioc:Adonis/Lucid/Database";
 import * as _ from "lodash"
+import {DateTime} from "luxon";
 
 export default class ColumnsController {
 
@@ -20,9 +21,8 @@ export default class ColumnsController {
 
     }
     await model.load('table')
-    const column = new Column()
     let columnData = request.all()
-    column.fill({
+    const column = await Column.create({
       description: columnData.description || '',
       title: columnData.title || '',
       attribute: columnData.attribute,
@@ -39,32 +39,7 @@ export default class ColumnsController {
       model_id: model.id,
       type: columnData.type
     })
-    try{
-      if(columnData.type !== 'calculated'){
-        const client = Database.connection(Env.get('DB_CONNECTION'))
 
-        await client.schema.table(model.table.name,table=>{
-          let type = column.type
-          let size: string | number = column.size
-          if(type.toLowerCase() === 'longtext'){
-            type = 'text'
-            size = 'longtext'
-          }
-          let query = table[type](column.name, size)
-          if(column.type === 'bigInteger' && column.attribute === 'unsigned'){
-            query = query.unsigned()
-          }
-        })
-        //query = query.index()
-        await this.indexCreator(column.indexed, columnData, model, true)
-      }
-    } catch (e) {
-      response.status(500)
-      return response.json({success:false, message: 'DB Error', trace: e?.stack.split('\n')})
-
-    }
-    await column.save()
-    Event.emit('model:updated', model)
 
     return response.json({success:true, data:column})
   }
@@ -151,6 +126,7 @@ export default class ColumnsController {
         null: columnData.null,
         table_id: model.table_id,
         model_id: model.id,
+        unique: columnData.unique,
         type: columnData.type
       })
 
@@ -176,6 +152,9 @@ export default class ColumnsController {
       }
       await columnNew.save()
 
+      model.updatedAt = DateTime.now()
+      await model.save()
+
       Event.emit('model:updated', model)
 
       return response.json({success:true, data:columnNew})
@@ -197,12 +176,17 @@ export default class ColumnsController {
         null: columnData.null,
         table_id: model.table_id,
         model_id: model.id,
+        unique: columnData.unique,
         type: columnData.type
       })
 
       await this.indexCreator(columnData.indexed, columnData, model)
 
       await column.save()
+
+      model.updatedAt = DateTime.now()
+      await model.save()
+
       Event.emit('model:updated', model)
       return response.json({success:true, data:column})
     }
@@ -266,6 +250,10 @@ export default class ColumnsController {
 
 
     await column.delete()
+
+    model.updatedAt = DateTime.now()
+    await model.save()
+
     Event.emit('model:updated', model)
 
 

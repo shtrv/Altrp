@@ -1,9 +1,10 @@
 import { HashDriverContract } from '@ioc:Adonis/Core/Hash'
-import * as bcrypt from 'bcrypt'
+import * as bcrypt from 'bcryptjs'
 
 export default class AltrpHashDriver implements HashDriverContract {
   saltRounds = 10
   make(value: string): Promise<string> {
+
     return bcrypt.hash(value, this.saltRounds)
   }
 

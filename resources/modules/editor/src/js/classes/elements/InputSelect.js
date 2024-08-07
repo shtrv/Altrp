@@ -60,6 +60,13 @@ class InputSelect extends BaseElement {
       label: "Field ID (Column Name)"
     });
 
+    this.addControl("query_sync", {
+      responsive: false,
+      type: CONTROLLER_SWITCHER,
+      locked: true,
+      label: "Sync With Query String",
+    });
+
     this.addControl("content_label", {
       type: CONTROLLER_TEXT,
       label: "Label",
@@ -204,18 +211,24 @@ class InputSelect extends BaseElement {
 
     this.addControl("sort_default", {
       type: CONTROLLER_SWITCHER,
-      label: "Sort Default",
+      label: "Options Sort Default",
       locked: true,
     });
 
-    this.addControl("model_for_options", {
-      type: CONTROLLER_SELECT2,
-      label: "Choose Datasource for Select Options",
-      nullable: true,
-      isClearable: true,
-      options_resource: "/admin/ajax/models_options?with_names=1&not_plural=1&with_sql_queries=1",
+    this.addControl("options_prevent", {
+      type: CONTROLLER_SWITCHER,
+      label: "Options Prevent Format",
       locked: true,
     });
+
+    // this.addControl("model_for_options", {
+    //   type: CONTROLLER_SELECT2,
+    //   label: "Choose Datasource for Select Options",
+    //   nullable: true,
+    //   isClearable: true,
+    //   options_resource: "/admin/ajax/models_options?with_names=1&not_plural=1&with_sql_queries=1",
+    //   locked: true,
+    // });
 
     this.addControl("params_for_update", {
       type: CONTROLLER_TEXTAREA,

@@ -52,6 +52,7 @@ export default class GlobalTemplateStylesController {
     delete data._type
     try {
       const style = await GlobalStyle.create(data)
+
       return style
     } catch (e) {
       console.error(e)

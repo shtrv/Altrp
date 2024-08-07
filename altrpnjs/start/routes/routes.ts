@@ -148,7 +148,8 @@ Route.get("/sw/*", async ({request, response}) => {
 })
 
 
-Route.get('/data/current-user', async ({response, auth}: HttpContextContract) => {
+Route.get('/data/current-user', async (httpContext: HttpContextContract) => {
+  const {response, auth} = httpContext
   response.header('Content-Type', 'application/javascript')
   let user = auth.user
   if (!user) {
@@ -167,7 +168,13 @@ window.current_user = ${JSON.stringify({is_guest: true})}
   user = user.toJSON()
   // @ts-ignore
   delete  user.password
-  return response.send(`window.current_user = ${JSON.stringify(user)}`);
+  // @ts-ignore
+  delete  user.guid
+
+  user = (await (require("../../app/Models/Customizer").default).callCustomEvents("__altrp_get_user", {user, httpContext})).user
+
+
+  return response.send(`window.current_user = ${JSON.stringify(user)};`);
 })
 
 Route.group(() => {
@@ -335,7 +342,7 @@ Route.group(() => {
         trace: e.stack.split('\n'),
       })
     }
-  })
+  }).middleware('catch_unhandled_json')
   /**
    * plugins ajax requests START
    */
@@ -364,7 +371,7 @@ Route.group(() => {
           }
           const module = isProd() ? await require(fileName).default : (await import(fileName)).default
           if (_.isFunction(module)) {
-            return await module(httpContext)
+            return await module(httpContext, plugin)
           }
         } catch (e) {
           httpContext.response.status(500)
@@ -495,5 +502,5 @@ Route.any('/wsaltrp', async ({request, response}) => {
   return response.send(res)
 }).middleware('catch_unhandled_json')
 
-
-
+Route.post('/ajax/set_theme', 'IndicesController.setTheme')
+Route.post('/ajax/set_lang', 'IndicesController.setLang')

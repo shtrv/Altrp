@@ -68,7 +68,11 @@ export {default as getAppContext} from "./functions/getAppContext";
 export {default as prepareContext} from "./functions/prepareContext";
 export {default as CONDITIONS_OPTIONS} from "./constants/CONDITIONS_OPTIONS";
 export {default as getResponsiveSetting} from "./functions/getResponsiveSetting";
+export qs from /* webpackChunkName: 'qs' */"qs";
 
+export async function checkAppearBottomElement(...a){
+  return (await import(/* webpackChunkName: 'checkAppearBottomElement' */"./helpers/elements/check-appear-bottom-element")).default(...a)
+}
 export async function dataToCSV(...a){
   return (await import(/* webpackChunkName: 'dataToCSV' */'./functions/dataToCSV')).default(...a)
 }
@@ -147,7 +151,7 @@ export function renderFontLink(font) {
   font +=
     ":100,100italic,200,200italic,300,300italic,400,400italic,500,500italic,600,600italic,700,700italic,800,800italic,900,900italic";
   let fontUrl =
-    "https://fonts.googleapis.com/css?family=" + font + "&subset=cyrillic";
+    "https://fonts.bunny.net/css?family=" + font + "&subset=cyrillic";
   fontUrl = encodeURI(fontUrl);
   return <link rel="stylesheet" key={fontUrl} href={fontUrl} />;
 }
@@ -224,4 +228,19 @@ function parseXml(xml, arrayTags) {
 
   return result;
 }
+
+export async function getActionsElement(){
+  const getActionsElement =  await import(/* webpackChunkName: 'get-actions-element' */ './helpers/get-actions-element')
+  return getActionsElement.default(...arguments)
+}
+
+export async function elementSearch(){
+  const getActionsElement =  await import(/* webpackChunkName: 'element-search' */ './helpers/element-search')
+  return getActionsElement.default(...arguments)
+}
+export async function getAxios(){
+  const axios =  await import(/* webpackChunkName: 'axios' */ 'axios')
+  return axios.default
+}
+
 

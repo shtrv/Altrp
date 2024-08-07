@@ -33,20 +33,20 @@ export default class OptionsController {
     })
   }
 
-  public async roles() {
+  public async roles({request}) {
     const roles = await Role.all()
 
     return options(roles, {
-      value: "id",
+      value: request.all().value || "id",
       label: "display_name"
     })
   }
 
-  public async permissions() {
+  public async permissions({request}:HttpContextContract) {
     const permissions = await Permission.all()
 
     return options(permissions, {
-      value: "id",
+      value: request.qs().value || "id",
       label: "display_name"
     })
   }

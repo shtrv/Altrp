@@ -12,6 +12,7 @@ Route.group(() => {
 
   Route.group(() => {
     Route.get("/get_health_check", "admin/AdminController.getHealthCheck")
+    Route.post("/all_logout", "admin/AdminController.allLogout")
 
 
     Route.get("/areas", "admin/AreasController.index")
@@ -41,7 +42,7 @@ Route.group(() => {
     Route.delete('/templates/:id', 'TemplatesController.delete')
     Route.get('/templates/:id/conditions', 'TemplatesController.conditions')
     Route.put('/templates/:id/conditions', 'TemplatesController.conditionsSet')
-    Route.get('/exports/templates/:id', 'TemplatesController.exportCustomizer');
+    Route.get('/exports/templates/:id', 'TemplatesController.exportTemplate');
     Route.delete('/reviews', 'TemplatesController.deleteAllReviews')
     Route.get('/templates/:id/settings', 'TemplatesController.settingsGet')
     Route.put('/templates/:id/settings', 'TemplatesController.settingsSet')
@@ -283,8 +284,12 @@ Route.group(() => {
           httpContext.response.status(404)
           return httpContext.response.json({success: false, message: 'Plugin Not Found'})
         }
-        const fileName = app_path(`AltrpPlugins/${plugin.name}/request-handlers/admin/${method}/${segments[4]}.${isProd() ? 'js' : 'ts'}`)
-        if (fs.existsSync(fileName)) {
+
+
+        const fileName = app_path(`AltrpPlugins/${plugin.name}/request-handlers/admin/${method}/${segments[4]}`)
+        const fileNameTs = app_path(`AltrpPlugins/${plugin.name}/request-handlers/admin/${method}/${segments[4]}.ts`)
+        const fileNameJS = app_path(`AltrpPlugins/${plugin.name}/request-handlers/admin/${method}/${segments[4]}.js`)
+        if (fs.existsSync(fileNameJS) || fs.existsSync(fileNameTs)) {
           if (isProd()) {
             Object.keys(require.cache).forEach(function (key) {
               delete require.cache[key]
@@ -292,7 +297,7 @@ Route.group(() => {
           }
           const module = isProd() ? await require(fileName).default : (await import(fileName)).default
           if (_.isFunction(module)) {
-            return await module(httpContext)
+            return await module(httpContext, plugin)
           }
         }
         httpContext.response.status(404)

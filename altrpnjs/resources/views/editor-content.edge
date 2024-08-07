@@ -11,7 +11,7 @@
     <style id="element-styles">
       {{style}}
     </style>
-
+    {{{frontAppCss}}}
     {{{styleVars}}}
     @if(css)
         <link href="{{css}}?{{env('PACKAGE_KEY')}}" rel="stylesheet"/>
@@ -44,4 +44,16 @@
 
     </div>
     <style id="styled"></style>
+    <script>
+
+        window.altrp = {
+          altrpThemes: {{{altrpThemes}}},
+
+          version: '{{getLatestVersion()}}',
+          isNodeJS: true,
+          menus: {{{menus}}},
+        };
+    </script>
+    {{{await applyPluginsFiltersAsync('editor_content_view_bottom_script', '')}}}
+
 @end

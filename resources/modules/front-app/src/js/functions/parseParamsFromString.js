@@ -39,10 +39,18 @@ export default function parseParamsFromString(
     }
     left = left.trim();
     right = right.trim();
+    console.log(left)
+    console.log(right)
     if (replace && left.indexOf("{{") !== -1) {
-      left = replaceContentWithData(left);
+      left = replaceContentWithData(left, context.getData());
     }
-    if (replace && right.match(/{{([\s\S]+?)(?=}})/g)) {
+
+    if (replace && right.includes('{{') && right.includes('}}') &&
+      (right.indexOf('{{') > 0 || right[right.length -1] !== '}')
+    ){
+      params[left]  = replaceContentWithData(right, context.getData())
+    } else if (replace && right.match(/{{([\s\S]+?)(?=}})/g)) {
+
       if (
         context.getProperty(
           right.match(/{{([\s\S]+?)(?=}})/g)[0].replace("{{", "")
@@ -72,6 +80,7 @@ export default function parseParamsFromString(
     } else {
       params[left] = right;
     }
+
     if (!allowObject && _.isObject(params[left])) {
       delete params[left];
     }

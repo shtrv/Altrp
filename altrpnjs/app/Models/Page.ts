@@ -26,6 +26,7 @@ import User from 'App/Models/User';
 import {isString} from 'lodash';
 import PageRole from 'App/Models/PageRole';
 import Role from 'App/Models/Role';
+import Permissions from 'App/Models/Permission';
 import Template from 'App/Models/Template';
 import Area from 'App/Models/Area';
 import Category from 'App/Models/Category';
@@ -45,6 +46,8 @@ import public_path from "../../helpers/path/public_path";
 import getResponsiveSetting, {setResponsiveSetting} from "../../helpers/getResponsiveSetting";
 import {optimizeStyles} from "../../helpers/screen";
 import altrpRandomId from "../../helpers/altrpRandomId";
+import PagesTemplate from "App/Models/PagesTemplate";
+import Permission from "App/Models/Permission";
 
 export default class Page extends BaseModel {
   @column({isPrimary: true})
@@ -137,6 +140,15 @@ export default class Page extends BaseModel {
   })
   public roles: ManyToMany<typeof Role>
 
+  @manyToMany(() => Permission, {
+    pivotTable: 'page_permission',
+    localKey: 'guid',
+    pivotForeignKey: 'page_guid',
+    relatedKey: 'name',
+    pivotRelatedForeignKey: 'permission_name',
+  })
+  public permissions: ManyToMany<typeof Permission>
+
   // public getAuthor() {
   //   return this.user.email
   // }
@@ -146,6 +158,11 @@ export default class Page extends BaseModel {
     pivotRelatedForeignKey: 'template_id'
   })
   public templates: ManyToMany<typeof Template>
+
+  @hasMany(() => PagesTemplate, {
+    foreignKey: 'page_id'
+  })
+  public pages_templates: HasMany<typeof PagesTemplate>
 
   @belongsTo(() => Model, {
     foreignKey: 'model_id',
@@ -498,11 +515,13 @@ export default class Page extends BaseModel {
 
     /** @var User $user */
     const pageRoleTable = await Database.from('page_role').select('*')
+    // @ts-ignore
+    await this.load('permissions')
     const pageRoles = pageRoleTable.filter(item => item.page_id == this.id)
     /**
      * Если никаких ролей не указано и for_guest false, то всегда доступно
      */
-    if ((!pageRoles.length) && !this.for_guest) {
+    if ((!pageRoles.length && !this.permissions.length) && !this.for_guest) {
       return true
     }
     if ((!currentUser) && this.for_guest) {
@@ -519,6 +538,10 @@ export default class Page extends BaseModel {
         allowed = true
       }
     }
+    if(this.permissions.length && ! allowed){
+      allowed = await currentUser.hasPermissions(this.permissions.map(p=>p.id))
+    }
+
     return allowed
   }
 
@@ -800,21 +823,31 @@ export default class Page extends BaseModel {
   static async generateAccessStyles(): Promise<string> {
 
     const roles = await Role.all()
+    const permissions = await Permissions.all()
 
     return `<style id="access-styles">
-    .front-app:not(.front-app_auth-type-guest) .altrp-element-auth-type_guest{
+    .front-app-body:not(.front-app_auth-type-guest) .altrp-element-auth-type_guest{
       display: none;
     }
-    .front-app:not(.front-app_auth-type-auth) .altrp-element-auth-type_auth{
+    .front-app-body:not(.front-app_auth-type-auth) .altrp-element-auth-type_auth{
+      display: none;
+    }
+    .altrp-element[class*="altrp-element-role_"],
+    .altrp-element[class*="altrp-element-permission_"]
+    {
       display: none;
     }
 
     ${roles.map(r => {
       return `
-      .altrp-element-role_${r.name}.altrp-element-role_${r.name}{
-              display: none;
-      }
       .front-app_role-${r.name} .altrp-element-role_${r.name}.altrp-element-role_${r.name}{
+              display: flex;
+      }
+      `
+    }).join('')}
+    ${permissions.map(r => {
+      return `
+      .front-app_permission-${r.name} .altrp-element-permission_${r.name}.altrp-element-permission_${r.name}{
               display: flex;
       }
       `
@@ -833,18 +866,24 @@ export default class Page extends BaseModel {
     let footer: { guid } | Template = await Template.getTemplate(this.id, 'footer')
     let footerContent = ''
     if (footer instanceof Template) {
-      footerContent = await footer.getChildrenContent(screenName, randomString)
+      footerContent = await footer.getChildrenContent(screenName, randomString, {
+        page: this,
+      })
     } else if (footer?.guid) {
       const _template = await Template.query().where('guid', footer.guid).first()
       if (_template) {
-        footerContent = await _template.getChildrenContent(screenName, randomString)
+        footerContent = await _template.getChildrenContent(screenName, randomString, {
+          page: this,
+        })
       }
     }
     let content = await Template.getTemplate(this.id, 'content')
     let contentGuid = data_get(content, 'guid')
     let contentContent = ''
     if (content instanceof Template) {
-      contentContent = await content.getChildrenContent(screenName, randomString)
+      contentContent = await content.getChildrenContent(screenName, randomString, {
+        page: this,
+      })
     }
     let footerGuid = data_get(footer, 'guid')
 
@@ -853,14 +892,17 @@ export default class Page extends BaseModel {
     let headerGuid = data_get(header, 'guid')
     let headerContent = ''
     if (header instanceof Template) {
-      headerContent = await header.getChildrenContent(screenName, randomString)
+      headerContent = await header.getChildrenContent(screenName, randomString, {
+        page: this,
+      })
     } else if (header?.guid) {
       const _template = await Template.query().where('guid', header.guid).first()
       if (_template) {
-        headerContent = await _template.getChildrenContent(screenName, randomString)
+        headerContent = await _template.getChildrenContent(screenName, randomString,{
+          page: this,
+        })
       }
     }
-
     let contentStyleLink = ''
 
     if (contentGuid) {
@@ -891,7 +933,7 @@ export default class Page extends BaseModel {
       footerStyleLink = `<link href="${cssHref}?${randomString}" id="altrp-footer-css-link-${footerGuid}" rel="stylesheet"/>`
     }
 
-    let result = `<div class="app-area app-area_header">
+    let result = `<div class="app-area app-area_header" >
       ${headerGuid ? headerContent : ''}
       </div>
       <div class="app-area app-area_content">
@@ -917,7 +959,7 @@ export default class Page extends BaseModel {
         continue
       }
       if (template instanceof Template) {
-        let content = await template.getChildrenContent(screenName, randomString)
+        let content = await template.getChildrenContent(screenName, randomString, {page:this})
         result += `<div class="app-area app-area_${area.name} ${area.getAreaClasses().join(' ')}">
           ${content ? content : ''}
           </div>`
@@ -932,7 +974,7 @@ export default class Page extends BaseModel {
             if (!fs.existsSync(public_path(cssHref))) {
               cssHref = `/altrp/css/${guid}.css`
             }
-            let content = await _template.getChildrenContent(screenName, randomString)
+            let content = await _template.getChildrenContent(screenName, randomString, {page:this})
             result += `<div class="app-area app-area_${area.name} ${area.getAreaClasses().join(' ')}">
           ${content ? content : ''}
           </div>
@@ -980,10 +1022,18 @@ export default class Page extends BaseModel {
     if(presetsStore){
       presetsStore = _.uniq(presetsStore)
     }
+
+
     return elementNames;
   }
 
   async _extractElementsNames(element, elementNames, only_react_elements,  presetsStore:string[]| null = null) {
+    if(! Page.coreElements.includes(element.name)){
+      if(! elementNames.includes(element.name)){
+        elementNames.push(element.name)
+      }
+      return
+    }
     let plugins_widget_list: any = ''
     if (!plugins_widget_list) {
       plugins_widget_list = []
@@ -1017,6 +1067,9 @@ export default class Page extends BaseModel {
         || element.name === 'section_widget') {
 
         recurseMapElements(element, function (element) {
+          if(! Page.coreElements.includes(element.name)){
+            return
+          }
             if (element.name && elementNames.indexOf(element.name) === -1) {
               elementNames.push(element.name)
             }
@@ -1095,7 +1148,6 @@ export default class Page extends BaseModel {
         }
       }
     }
-
   }
 
   /**
@@ -1182,6 +1234,7 @@ export default class Page extends BaseModel {
     }
     const dependenciesList = [
       'altrppagestate',
+      'altrpstorage',
       'altrppage',
       'altrpdata',
       'altrpforms',
@@ -1493,6 +1546,7 @@ export default class Page extends BaseModel {
     column: [
       'link_link',
     ],
+
     posts: [
       'current_page_text',
       'prev_icon_position',
@@ -1533,6 +1587,7 @@ export default class Page extends BaseModel {
     'text',
     'breadcrumbs',
     'input-text-common',
+    'input-tel',
     'input-textarea',
     'input-checkbox',
     'input-radio',

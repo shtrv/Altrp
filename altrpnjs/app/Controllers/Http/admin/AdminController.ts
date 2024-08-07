@@ -16,6 +16,9 @@ import {RequestContract} from "@ioc:Adonis/Core/Request";
 import base_path from '../../../../helpers/base_path'
 import exec from '../../../../helpers/exec'
 import Model from "App/Models/Model";
+import GlobalStyle from "App/Models/GlobalStyle";
+import envWriter from "../../../../helpers/envWriter";
+import { DateTime } from "luxon";
 
 export default class AdminController {
 
@@ -206,9 +209,15 @@ export default class AdminController {
     console.info('Upgrading Pages')
     const id = request.input('id')
 
-    console.log(`result of generator:page ${id ? `--id=${id}` : ''}`, await exec(`node ${base_path('ace')} generator:page ${id ? `--id=${id}` : ''}`))
+    GlobalStyle.updateCssFile().catch(e=>{
+      console.error('Error while GlobalStyle.updateCssFile', e)
+    }).then(()=>{
+      console.log('GlobalStyle.updateCssFile success')
+    })
 
-    console.info('Pages Upgraded')
+    console.log(`result of generator: page ${id ? `--id=${id}` : ''}: `, await exec(`node ${base_path('ace')} generator:page ${id ? `--id=${id}` : ''}`))
+
+    //console.info('Pages Upgraded')
   }
 
   private static async upgradeModels() {
@@ -231,11 +240,11 @@ export default class AdminController {
 
     const listenerGenerator = new ListenerGenerator()
 
-    await listenerGenerator.hookTemplates()
-    await listenerGenerator.hookControllers()
-    await listenerGenerator.hookModels()
-    await listenerGenerator.hookPages()
-    await listenerGenerator.hookListeners()
+    // await listenerGenerator.hookTemplates()
+    // await listenerGenerator.hookControllers()
+    // await listenerGenerator.hookModels()
+    // await listenerGenerator.hookPages()
+     await listenerGenerator.hookListeners()
 
     console.log(`resul of generator:listener`, await exec(`node ${base_path('ace')} generator:listener`))
 
@@ -251,11 +260,12 @@ export default class AdminController {
   }
 
   private static async upgradeSchedules() {
-    console.info('Upgrading Schedules')
+    console.info('Upgrading Schedules and Helpers')
 
-    console.log(`result of generator:schedule`, await exec(`node ${base_path('ace')} generator:schedule`))
+    await exec(`node ${base_path('ace')} generator:schedule`)
+    await exec(`node ${base_path('ace')} generator:helper`)
 
-    console.info('Schedules Upgraded')
+    console.info('Schedules and Helpers Upgraded')
   }
 
   async getHealthCheck({response}:HttpContextContract){
@@ -268,5 +278,15 @@ export default class AdminController {
         used
       }
     })
+  }
+  async allLogout({}:HttpContextContract){
+
+    await envWriter([{
+      key: 'ALL_LOGOUT_DATE',
+      value: DateTime.now(),
+    }])
+    return{
+      success:true,
+    }
   }
 }

@@ -15,7 +15,7 @@ import public_path from "../../../../helpers/path/public_path";
 import Logger from "@ioc:Adonis/Core/Logger";
 import Application from "@ioc:Adonis/Core/Application";
 import LIKE from "../../../../helpers/const/LIKE";
-import { transliterate } from "../../../../helpers/transliterate";
+import transliterate  from "../../../../helpers/transliterate";
 
 export default class MediaController {
   private static fileTypes: any;
@@ -30,7 +30,7 @@ export default class MediaController {
       mediaToUpdate.map(async (m: Media) => {
         m.guid = guid();
         await m.save();
-        Logger.info(`Media id ${m.id} guid write!`);
+        Logger.info(`Media id ${m.id} write!`);
       })
     );
     let query = Media.query().whereNull("deleted_at");
@@ -137,7 +137,7 @@ export default class MediaController {
       mediaToUpdate.map(async (m: Media) => {
         m.guid = guid();
         await m.save();
-        Logger.info(`Media id ${m.id} guid write!`);
+        Logger.info(`Media id ${m.id} write!`);
       })
     );
     let query = Media.query().where("id", "=", id).whereNull("deleted_at");
@@ -215,7 +215,13 @@ export default class MediaController {
     return MediaController.fileTypes;
   }
   static getTypeForFile(file) {
-    let extensionLoaded = file.clientName.split(".").pop();
+    let extensionLoaded
+
+    if(typeof file === 'string'){
+      extensionLoaded = file.split(".").pop();
+    } else {
+      extensionLoaded = file.clientName.split(".").pop();
+    }
 
     let type = "";
     let file_types = MediaController.getFileTypes();
@@ -272,7 +278,6 @@ export default class MediaController {
         fs.mkdirSync(public_path(dirname), { recursive: true });
       }
       media.filename = urlBase + filename;
-      console.log(filename);
       // @ts-ignore
       await file.moveToDisk(dirname, { name: filename }, "local");
       let content = fs.readFileSync(public_path(dirname + filename));
@@ -333,6 +338,7 @@ export default class MediaController {
       if (!file) {
         continue;
       }
+
       // @ts-ignore
       const ext = file.clientName.split(".").pop();
       let media = new Media();

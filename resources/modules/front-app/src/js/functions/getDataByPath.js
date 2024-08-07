@@ -21,6 +21,14 @@ export default function getDataByPath(
   context = null,
   altrpCheck = false
 ) {
+
+  if(path === '__current_item__'){
+    return {
+      ...((context instanceof AltrpModel ? context.getData(true) : context) || {})
+
+    }
+  }
+
   if (!path) {
     return _default;
   }
@@ -83,6 +91,25 @@ export default function getDataByPath(
   if (!_.isString(path)) {
     return value;
   }
+  if(path === 'altrppage.is_dark' ||path ===  'altrppagestate.is_dark'){
+    return document.documentElement.classList.contains('altrp-theme_dark')
+  }
+  if(path === 'altrppage.is_mobile'){
+    return document.documentElement.classList.contains('is_mobile')
+  }
+  let pathname = location.pathname
+  if(pathname[pathname.length - 1] === '/'){
+    pathname = pathname.substr(0, pathname.length - 1)
+  }
+  if(path === 'altrppage.path'){
+    return pathname
+  }
+  if(path === 'altrppage.pathname'){
+    return pathname
+  }
+  if(path === 'altrppage.lang' ||path ===  'altrppagestate.lang'){
+    return document.documentElement.getAttribute('lang')
+  }
   if (path.indexOf("altrpdata.") === 0) {
     path = path.replace("altrpdata.", "");
     value = currentDataStorage
@@ -107,7 +134,16 @@ export default function getDataByPath(
   } else if (path.indexOf("altrptime.") === 0) {
     value = getTimeValue(path.replace("altrptime.", ""));
   } else if (path.indexOf("altrpforms.") === 0) {
-    value = _.get(formsStore, path.replace("altrpforms.", ""), _default);
+
+    let [formId, ...fieldId] = path.replace("altrpforms.", "").split('.')
+    fieldId = fieldId.join('.')
+    if(path.includes('.length')){
+      value = _.get(formsStore, path.replace('altrpforms.', ''), _default);
+
+    } else {
+      value = _.get(formsStore, [formId, fieldId], _default);
+
+    }
   } else if (path.indexOf("altrppage.") === 0) {
     value = altrpPage
       ? altrpPage.getProperty(path.replace("altrppage.", ""), _default)

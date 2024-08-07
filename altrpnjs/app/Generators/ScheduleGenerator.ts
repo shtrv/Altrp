@@ -82,6 +82,7 @@ export default class ScheduleGenerator extends BaseGenerator {
 
     clearRequireCache()
 
+
     return true
   }
 

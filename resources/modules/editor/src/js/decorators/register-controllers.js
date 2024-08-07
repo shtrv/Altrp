@@ -15,6 +15,7 @@ import {
 import Repeater from "../classes/Repeater";
 import { CONDITIONS_OPTIONS } from "../../../../front-app/src/js/helpers";
 import {actionsControllers} from "./actions-controllers";
+import informerControllers from "./informer-controllers";
 /**
  * Функция декорирует элемент неободимыми контроллерами
  * @param {BaseElement} element
@@ -428,6 +429,12 @@ export function advancedTabControllers(element) {
           'positioning_width_type': 'custom',
         }
       });
+      element.addControl('css_width', {
+        label: 'Or Use CSS width Value',
+        conditions: {
+          'positioning_width_type': 'custom',
+        }
+      });
     }
 
     // if (element.getType() === 'widget') {
@@ -586,6 +593,19 @@ export function advancedTabControllers(element) {
       'conditional_display_choose': 'auth',
     },
     options_resource: '/admin/ajax/role_options?value=name',
+    isMulti: true,
+    responsive: false,
+    prefetch_options: true,
+    isClearable: true,
+  });
+
+  element.addControl('conditional_permissions', {
+    type: CONTROLLER_SELECT2,
+    label: 'Allowed with Permissions',
+    conditions: {
+      'conditional_display_choose': 'auth',
+    },
+    options_resource: '/admin/ajax/permissions_options?value=name',
     isMulti: true,
     responsive: false,
     prefetch_options: true,
@@ -941,6 +961,21 @@ export function advancedTabControllers(element) {
   }
   );
 
+  element.addControl('hide_desktop', {
+    type: CONTROLLER_SWITCHER,
+    label: 'Hide On All Desktop Devices',
+    locked:true,
+    responsive: false,
+  });
+
+  element.addControl('hide_on_mobile', {
+    type: CONTROLLER_SWITCHER,
+    label: 'Hide On All Mobile Devices',
+    locked:true,
+    responsive: false,
+  });
+
+
   element.addControl('hide_on_wide_screen', {
     type: CONTROLLER_SWITCHER,
     label: 'Hide On Wide Screen',
@@ -949,7 +984,7 @@ export function advancedTabControllers(element) {
 
   element.addControl('hide_on_desktop', {
     type: CONTROLLER_SWITCHER,
-    label: 'Hide On Desktop',
+    label: 'Hide On Desktop ',
     responsive: false,
   });
 
@@ -2097,6 +2132,7 @@ export function advancedTabControllers(element) {
   element.addControl('sticky', {
     type: CONTROLLER_SELECT,
     label: 'Sticky Type',
+    locked: true,
     options:()=>{
       const stickyOptions = [
         {
@@ -2106,6 +2142,10 @@ export function advancedTabControllers(element) {
         {
           label: 'Top',
           value: 'top',
+        },
+        {
+          label: 'Half Top',
+          value: 'half_top',
         },
         // {
         //   label: 'Bottom',
@@ -2124,6 +2164,7 @@ export function advancedTabControllers(element) {
 
   element.addControl('st_spacing', {
     type: CONTROLLER_NUMBER,
+    locked: true,
     label: 'Spacing'
   })
 
@@ -2134,6 +2175,8 @@ export function advancedTabControllers(element) {
   actionsControllers(element, 'Appearance of Top of Element Actions', 'wrapper_appearT_', TAB_ADVANCED);
 
   actionsControllers(element, 'Appearance of Bottom of Element Actions', 'wrapper_appearB_', TAB_ADVANCED);
+
+  informerControllers(element)
 
 }
 window.advancedTabControllers = advancedTabControllers

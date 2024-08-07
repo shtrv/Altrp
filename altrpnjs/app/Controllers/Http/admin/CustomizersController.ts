@@ -1,5 +1,6 @@
 import { DateTime } from 'luxon'
 import Customizer from 'App/Models/Customizer';
+import CategoryObject from 'App/Models/CategoryObject';
 import Model from 'App/Models/Model';
 import {HttpContextContract} from '@ioc:Adonis/Core/HttpContext';
 import validGuid from '../../../../helpers/validGuid';
@@ -29,6 +30,7 @@ export default class CustomizersController {
     }
 
     let customizer = new Customizer()
+    delete requestAll.robotizer
     customizer.fill(requestAll)
 
     customizer.guid = guid()
@@ -38,7 +40,7 @@ export default class CustomizersController {
         customizer.model_guid = model.guid
       }
       if (!customizer.settings) {
-        customizer.settings = []
+        customizer.settings = {}
       }
       if (customizer.type === 'schedule') {
         customizer.settings.period_unit = customizer.settings.period_unit || 'day'
@@ -166,11 +168,13 @@ export default class CustomizersController {
         model.preload('table')
       })
     })
+    await customizer.load('categories')
+    const data = customizer.serialize()
+    data.categories = data.categories.map(c=>c.guid)
     return response.json({
       'success':
         true,
-      'data':
-      customizer
+      data
     },)
   }
 
@@ -211,7 +215,27 @@ export default class CustomizersController {
       await exec(`node ${base_path('ace')} generator:schedule --delete --id=${customizer.id}`)
       customizer.removeSchedule()
     }
+    if (oldType === 'helper' && all.type !== 'helper') {
+      await exec(`node ${base_path('ace')} generator:helper --delete --id=${customizer.id}`)
+    }
 
+    let {categories = []} = all
+
+    if(customizer){
+      // @ts-ignore
+      await  CategoryObject.query().where('object_guid', customizer.guid).delete()
+      categories = categories.map(c=>{
+        return{
+          // @ts-ignore
+          object_guid: customizer.guid,
+          category_guid: c,
+          object_type: 'Customizer'
+        }
+      })
+      await CategoryObject.createMany(categories)
+    }
+
+    delete all.categories
     customizer.merge(all)
     customizer.merge({
       title: request.all().title,
@@ -287,6 +311,10 @@ export default class CustomizersController {
           customizer.schedule()
         }
       }
+      if (customizer.type === 'helper') {
+        await exec(`node ${base_path('ace')} generator:helper --id=${customizer.id}`)
+
+      }
 
       if(model) {
         Event.emit('model:updated', model)
@@ -313,21 +341,30 @@ export default class CustomizersController {
         },
       )
     }
+    /**
+     * @var customizer Customizer
+     */
     await customizer.load('source', query => {
       query.preload('model',model => {
         model.preload('table')
       })
     })
+
+    await customizer.load('categories')
+    const data = customizer.serialize()
+    data.categories = data.categories.map(c=>c.guid)
     return response.json({
       'success':
-        true, 'data':
-        customizer.serialize()
+        true,
+      data
+
     },)
   }
 
   public async index({request, response}: HttpContextContract) {
 
     let search = request.qs().s || ''
+    search = search.trim()
     let categories = request.qs() || ''
     let page = request.qs().page || 1
     let pageSize = request.qs().pageSize || 20
@@ -349,13 +386,29 @@ export default class CustomizersController {
 
     if (search) {
       customizers.where(function (query) {
-        let _s = search.split(' ')
-        for( const search of _s){
-          query.where('altrp_customizers.title', LIKE, '%' + search + '%')
+        if(search.indexOf('%') === 0){
+          query.where('data', LIKE, `${search}%`)
+        }else if(search.indexOf('@') === 0){
+          query.whereHas('altrp_model', query=>{
+            query.where('name', LIKE, `%${search.replace('@', '')}%`)
+          })
+        } else {
+          let _s = search.split(' ')
+          for( const search of _s){
+            query.where('altrp_customizers.title', LIKE, '%' + search + '%')
 
-          if(Number(search)){
-            query.orWhere('altrp_customizers.id',   search )
+            if(Number(search)){
+              query.orWhere('altrp_customizers.id',   search )
+            }
           }
+          query.orWhere(query=>{
+            for( const search of _s){
+              query.where('altrp_customizers.name', LIKE, '%' + search + '%')
+
+            }
+
+          })
+
         }
       })
     }

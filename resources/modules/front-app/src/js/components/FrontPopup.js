@@ -28,10 +28,8 @@ class FrontPopup extends Component {
     )
     this.state = {
       isVisible,
-      stylesUrl: `/altrp/css/DEFAULT_BREAKPOINT/${template.guid}.css`,
       isShownOnScroll: false
     };
-    this.close = this.close.bind(this);
   }
 
 
@@ -60,6 +58,8 @@ class FrontPopup extends Component {
   close = () => {
     this.setState({isVisible: false, isShownOnScroll: false});
     this.props.closePopup();
+    document.body.dispatchEvent(new Event('click', {bubbles:true}))
+
   }
   onExited = () => {
     document.body.classList.remove('overflow-hidden');
@@ -182,20 +182,12 @@ class FrontPopup extends Component {
     }
   }
 
-  onError = e =>{
-    const template = _.isFunction(this.props.getTemplate) ? this.props.getTemplate() : this.props.template
-    e.preventDefault()
-    e.stopPropagation()
-    this.setState(state =>({...state,
-      stylesUrl: `/altrp/css/${template.guid}.css`,
-    }))
-  }
   componentDidCatch = (e)=>{
     console.error(e);
   }
   render() {
     const template = _.isFunction(this.props.getTemplate) ? this.props.getTemplate() : this.props.template
-    const {isVisible, stylesUrl} = this.state;
+    const {isVisible} = this.state;
     let classes = [`app-popup`];
     const rootElement = this.rootElement;
     rootElement.popupGUID = _.get(template, "guid");
@@ -287,6 +279,7 @@ class FrontPopup extends Component {
         onClick={() => {
           this.setState({isVisible: false});
           this.props.closePopup();
+          document.body.dispatchEvent(new Event('click', {bubbles:true}))
         }}
       >
         <AltrpImage
@@ -313,6 +306,7 @@ class FrontPopup extends Component {
         onClick={() => {
           this.setState({isVisible: false});
           this.props.closePopup();
+          document.body.dispatchEvent(new Event('click', {bubbles:true}))
         }}
       >
         {iconsManager().renderIcon('times', {
@@ -343,9 +337,6 @@ class FrontPopup extends Component {
 
     return (
       <>
-        <link rel="stylesheet"
-              onError={this.onError}
-              href={stylesUrl}/>
         <CSSTransition
           in={isVisible}
           timeout={Number(timeout)}

@@ -26,8 +26,12 @@ export default class PageDataSources extends BaseSchema {
       table.timestamp('updated_at', { useTz: true })
 
       table.foreign('source_id').references('altrp_sources.id')
-      table.foreign('page_id').references('pages.id')
+        .onDelete('cascade')
+        .onUpdate('cascade')
 
+      table.foreign('page_id').references('pages.id')
+        .onDelete('cascade')
+        .onUpdate('cascade')
     })
   }
 

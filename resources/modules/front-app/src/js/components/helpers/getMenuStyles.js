@@ -11,6 +11,10 @@ const getMenuStyles = (settings, id) => {
 
   let styles = `${parentClass} .altrp-menu{`;
 
+  let radius = getResponsiveSetting(settings, 'menu_radius');
+  if (radius) {
+    styles += dimensionsControllerToStyles(radius,'border-radius');
+  }
   const menuAlignment = getResponsiveSetting(settings, "menu_alignment");
 
   if (getResponsiveSetting(settings, 'type') === 'horizontal') {
@@ -81,7 +85,7 @@ const getMenuStyles = (settings, id) => {
    */
   let renderButton = getResponsiveSetting(settings, 'button');
   if (renderButton) {
-    styles += `${parentClass}${parentClass} {`;
+    styles += `${parentClass}${parentClass}${parentClass} {`;
     let alignment = getResponsiveSetting(settings, 'alignment')
     styles += `justify-content:${alignment};flex-direction: row;`;
     if (alignment !== 'stretch') {
@@ -98,7 +102,7 @@ const getMenuStyles = (settings, id) => {
    */
   let renderButtonDisabled = getResponsiveSetting(settings, 'button', '.state-disabled');
   if (renderButtonDisabled) {
-    styles += `.state-disabled ${parentClass}${parentClass} {`;
+    styles += `.state-disabled ${parentClass}${parentClass}${parentClass} {`;
     let alignmentDisabled = getResponsiveSetting(settings, 'alignment', '.state-disabled')
     styles += `justify-content:${alignmentDisabled};flex-direction: row;`;
     if (alignmentDisabled !== 'stretch') {
@@ -115,7 +119,7 @@ const getMenuStyles = (settings, id) => {
    */
   let renderButtonActive = getResponsiveSetting(settings, 'button', '.active');
   if (renderButtonActive) {
-    styles += `.active ${parentClass}${parentClass} {`;
+    styles += `.active ${parentClass}${parentClass}${parentClass} {`;
     let alignmentActive = getResponsiveSetting(settings, 'alignment', '.active')
     styles += `justify-content:${alignmentActive};flex-direction: row;`;
     if (alignmentActive !== 'stretch') {
@@ -131,9 +135,12 @@ const getMenuStyles = (settings, id) => {
    * @type {string}
    */
   if (renderButton) {
-    styles += `${parentClass}${parentClass} .altrp-menu-toggle{`;
+    styles += `${parentClass}${parentClass}${parentClass} .altrp-menu-toggle{`;
     let buttonBg = getResponsiveSetting(settings, 'button_bg')
     if (buttonBg && buttonBg.color) {
+      if(buttonBg.guid && buttonBg.cssVar){
+        buttonBg.color = buttonBg.cssVar
+      }
       styles += `background-color:${buttonBg.color};background-image:none;`;
     }
     let buttonColor = getResponsiveSetting(settings, 'button_color')
@@ -151,6 +158,9 @@ const getMenuStyles = (settings, id) => {
       styles += dimensionsControllerToStyles(getResponsiveSetting(settings, 'border_width'), 'border-width');
       let borderColor = getResponsiveSetting(settings, 'border_color')
       if (borderColor && borderColor.color) {
+        if(borderColor.guid && borderColor.cssVar){
+          borderColor.color = borderColor.cssVar
+        }
         styles += `border-color:${borderColor.color};`;
       }
     }
@@ -161,9 +171,12 @@ const getMenuStyles = (settings, id) => {
     styles += '} ';
 
 //state disabled
-    styles += `.state-disabled ${parentClass}${parentClass} .altrp-menu-toggle{`;
+    styles += `.state-disabled ${parentClass}${parentClass}${parentClass} .altrp-menu-toggle{`;
     let buttonBgDisabled = getResponsiveSetting(settings, 'button_bg', '.state-disabled')
     if (buttonBgDisabled && buttonBgDisabled.color) {
+      if(buttonBgDisabled.guid && buttonBgDisabled.cssVar){
+        buttonBgDisabled.color = buttonBgDisabled.cssVar
+      }
       styles += `background-color:${buttonBgDisabled.color};background-image:none;`;
     }
     let buttonColorDisabled = getResponsiveSetting(settings, 'button_color', '.state-disabled')
@@ -180,6 +193,9 @@ const getMenuStyles = (settings, id) => {
       styles += dimensionsControllerToStyles(getResponsiveSetting(settings, 'border_width', '.state-disabled'), 'border-width');
       let borderColorDisabled = getResponsiveSetting(settings, 'border_color', '.state-disabled')
       if (borderColorDisabled && borderColorDisabled.color) {
+        if(borderColorDisabled.guid && borderColorDisabled.cssVar){
+          borderColorDisabled.color = borderColorDisabled.cssVar
+        }
         styles += `border-color:${borderColorDisabled.color};`;
       }
     }
@@ -189,9 +205,12 @@ const getMenuStyles = (settings, id) => {
     }
     styles += '} ';
     //state active
-    styles += `.active ${parentClass}${parentClass} .altrp-menu-toggle{`;
+    styles += `.active ${parentClass}${parentClass}${parentClass} .altrp-menu-toggle{`;
     let buttonBgActive = getResponsiveSetting(settings, 'button_bg', '.active')
     if (buttonBgActive && buttonBgActive.color) {
+      if(buttonBgActive.guid && buttonBgActive.cssVar){
+        buttonBgActive.color = buttonBgActive.cssVar
+      }
       styles += `background-color:${buttonBgActive.color};background-image:none;`;
     }
     let buttonColorActive = getResponsiveSetting(settings, 'button_color', '.active')
@@ -208,6 +227,9 @@ const getMenuStyles = (settings, id) => {
       styles += dimensionsControllerToStyles(getResponsiveSetting(settings, 'border_width', '.active'), 'border-width');
       let borderColorActive = getResponsiveSetting(settings, 'border_color', '.active')
       if (borderColorActive && borderColorActive.color) {
+        if(borderColorActive.guid && borderColorActive.cssVar){
+          borderColorActive.color = borderColorActive.cssVar
+        }
         styles += `border-color:${borderColorActive.color};`;
       }
     }
@@ -221,6 +243,10 @@ const getMenuStyles = (settings, id) => {
     styles += `${parentClass} .altrp-menu-toggle:hover{`;
     buttonBg = getResponsiveSetting(settings, 'button_bg', ':hover')
     if (buttonBg && buttonBg.color) {
+
+      if(buttonBg.guid && buttonBg.cssVar){
+        buttonBg.color = buttonBg.cssVar
+      }
       styles += `background-color:${buttonBg.color};background-image:none;`;
     }
     buttonColor = getResponsiveSetting(settings, 'button_color', ':hover')
@@ -233,6 +259,9 @@ const getMenuStyles = (settings, id) => {
       styles += dimensionsControllerToStyles(getResponsiveSetting(settings, 'border_width', ':hover'), 'border-width');
       let borderColor = getResponsiveSetting(settings, 'border_color', ':hover')
       if (borderColor && borderColor.color) {
+        if(borderColor.guid && borderColor.cssVar){
+          borderColor.color = borderColor.cssVar
+        }
         styles += `border-color:${borderColor.color};`;
       }
     }
@@ -265,12 +294,7 @@ const getMenuStyles = (settings, id) => {
   //
   // }
   styles += '}';
-  // styles += `.altrp-element${id} .altrp-menu{`;
-  // let menuBg = getResponsiveSetting(settings, 'menu_bg');
-  // if (menuBg && menuBg.color) {
-  //   styles += `background-color: ${menuBg.color};`;
-  // }
-  // styles += '}';
+
   /**
    * стили для ховера
    * @type {string}
@@ -314,6 +338,7 @@ const getMenuStyles = (settings, id) => {
     styles += dimensionsControllerToStyles(padding);
   }
 
+
   let typographic = getResponsiveSetting(settings, 'typographic');
 
   if (typographic) {
@@ -324,11 +349,17 @@ const getMenuStyles = (settings, id) => {
 
 
   if (bg && bg.color) {
+    if(bg.guid && bg.cssVar){
+      bg.color = bg.cssVar
+    }
     styles += `background-color: ${bg.color};`;
   }
   let color = getResponsiveSetting(settings, 'color');
 
   if (color && color.color) {
+    if(color.guid && color.cssVar){
+      color.color = color.cssVar
+    }
     styles += `color: ${color.color};`;
     styles += `.bp3-icon svg, .bp3-icon path{fill: ${color.color};}`;
   }
@@ -349,11 +380,17 @@ const getMenuStyles = (settings, id) => {
   }
   let bgDisabled = getResponsiveSetting(settings, 'bg', '.state-disabled');
   if (bgDisabled && bgDisabled.color) {
+    if(bgDisabled.guid && bgDisabled.cssVar){
+      bgDisabled.color = bgDisabled.cssVar
+    }
     styles += `background-color: ${bgDisabled.color};`;
   }
   let colorDisabled = getResponsiveSetting(settings, 'color', '.state-disabled');
 
   if (colorDisabled && colorDisabled.color) {
+    if(colorDisabled.guid && colorDisabled.cssVar){
+      colorDisabled.color = colorDisabled.cssVar
+    }
     styles += `color: ${colorDisabled.color};`;
     styles += `.bp3-icon svg, .bp3-icon path{fill: ${colorDisabled.color};}`;
   }
@@ -366,6 +403,10 @@ const getMenuStyles = (settings, id) => {
     .bp3-menu-item.altrp-menu-item.altrp-menu-item${id}:hover{`;
   bg = getResponsiveSetting(settings, 'bg', ':hover');
   if (bg && bg.color) {
+
+    if(bg.guid && bg.cssVar){
+      bg.color = bg.cssVar
+    }
     styles += `background-color: ${bg.color};`;
   }
 
@@ -377,6 +418,10 @@ const getMenuStyles = (settings, id) => {
 
   color = getResponsiveSetting(settings, 'color', ':hover');
   if (color && color.color) {
+
+    if(color.guid && color.cssVar){
+      color.color = color.cssVar
+    }
     styles += `color: ${color.color};`;
     styles += `.bp3-icon svg, .bp3-icon path{fill: ${color.color};}`;
   }
@@ -389,6 +434,10 @@ const getMenuStyles = (settings, id) => {
     .bp3-menu-item.altrp-menu-item.altrp-menu-item${id}.active{`;
   bg = getResponsiveSetting(settings, 'bg', '.active');
   if (bg && bg.color) {
+
+    if(bg.guid && bg.cssVar){
+      bg.color = bg.cssVar
+    }
     styles += `background-color: ${bg.color};`;
   }
 
@@ -400,6 +449,10 @@ const getMenuStyles = (settings, id) => {
 
   color = getResponsiveSetting(settings, 'color', '.active');
   if (color && color.color) {
+
+    if(color.guid && color.cssVar){
+      color.color = color.cssVar
+    }
     styles += `color: ${color.color};`;
     styles += `.bp3-icon svg, .bp3-icon path{fill: ${color.color};}`;
   }
@@ -421,6 +474,9 @@ const getMenuStyles = (settings, id) => {
 
   let sub_menu_bg = getResponsiveSetting(settings, 'sub_menu_bg');
   if (sub_menu_bg && sub_menu_bg.color) {
+    if(sub_menu_bg.guid && sub_menu_bg.cssVar){
+      sub_menu_bg.color = sub_menu_bg.cssVar
+    }
     styles += `background-color: ${sub_menu_bg.color};`;
   }
 
@@ -435,6 +491,9 @@ const getMenuStyles = (settings, id) => {
 
   let sub_menu_bgDisabled = getResponsiveSetting(settings, 'sub_menu_bg', '.state-disabled');
   if (sub_menu_bgDisabled && sub_menu_bgDisabled.color) {
+    if(sub_menu_bgDisabled.guid && sub_menu_bgDisabled.cssVar){
+      sub_menu_bgDisabled.color = sub_menu_bgDisabled.cssVar
+    }
     styles += `background-color: ${sub_menu_bgDisabled.color};`;
   }
 
@@ -448,6 +507,9 @@ const getMenuStyles = (settings, id) => {
 
   let sub_menu_bgActive = getResponsiveSetting(settings, 'sub_menu_bg', '.active');
   if (sub_menu_bgActive && sub_menu_bgActive.color) {
+    if(sub_menu_bgActive.guid && sub_menu_bgActive.cssVar){
+      sub_menu_bgActive.color = sub_menu_bgActive.cssVar
+    }
     styles += `background-color: ${sub_menu_bgActive.color};`;
   }
 
@@ -490,6 +552,9 @@ const getMenuStyles = (settings, id) => {
 
   sub_menu_bg = getResponsiveSetting(settings, 'sub_menu_bg', ':hover');
   if (sub_menu_bg && sub_menu_bg.color) {
+    if(sub_menu_bg.guid && sub_menu_bg.cssVar){
+      sub_menu_bg.color = sub_menu_bg.cssVar
+    }
     styles += `background-color: ${sub_menu_bg.color};`;
   }
 
@@ -516,6 +581,7 @@ const getMenuStyles = (settings, id) => {
   const menuStyles = [
     "altrp-menu",
       ["padding", "menu_padding", "dimensions"],
+      ["shadow", "menu_shadow", "shadow"],
       () => {
         const value = getResponsiveSetting(settings, 'gap');
 
@@ -527,9 +593,17 @@ const getMenuStyles = (settings, id) => {
       },
       ["background-color", "menu_bg", "color"],
     "}",
+    "altrp-menu:hover",
+      ["shadow", "menu_shadow", "shadow", ':hover'],
+
+    "}",
 
     "altrp-menu li .bp3-menu-item",
-      ["border-radius", "item_radius", "dimensions"],
+    ["border-radius", "item_radius", "dimensions"],
+    ["shadow", "menu_items_shadow", "shadow"],
+    "}",
+    "altrp-menu li .bp3-menu-item:hover",
+    ["shadow", "menu_items_shadow", "shadow", ':hover'],
     "}",
 
     "altrp-menu-toggle .altrp-menu-item__icon svg",
@@ -542,6 +616,13 @@ const getMenuStyles = (settings, id) => {
       },
     "}",
   ]
+
+  if(!_.isEmpty(getResponsiveSetting(settings,'menu_shadow',':hover'))){
+    styles += `.altrp-menu{
+  transition-duration:0.4s;
+  transition-property: box-shadow;
+}`
+  }
 
   const styledArray = [
     ...menuStyles

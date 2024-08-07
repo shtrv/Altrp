@@ -46,6 +46,14 @@ import applyPluginsFiltersAsync from "../../helpers/plugins/applyPluginsFiltersA
 import applyPluginsFiltersSync from "../../helpers/plugins/applyPluginsFiltersSync";
 import MapperNode from "App/Customizer/Nodes/MapperNode";
 import ValidatorNode from "App/Customizer/Nodes/ValidatorNode";
+import EmailTemplateNode from "App/Customizer/Nodes/EmailTemplateNode";
+import EventNode from "App/Customizer/Nodes/EventNode";
+import clearValue from "../../helpers/cache/clearValue";
+import fs from "fs";
+import path from "path";
+import ListenerGenerator from "App/Generators/ListenerGenerator";
+import setValue from "../../helpers/cache/setValue";
+import getValue from "../../helpers/cache/getValue";
 
 export default class Customizer extends BaseModel {
   timeout
@@ -53,6 +61,7 @@ export default class Customizer extends BaseModel {
   public static sourceable_type = `App\\Altrp\\Customizer`
 
   public static table = 'altrp_customizers'
+  public static listener_imports = 'listener_imports'
 
   public parsed_data: any
 
@@ -95,7 +104,7 @@ export default class Customizer extends BaseModel {
       return JSON.stringify(settings)
     },
   })
-  public settings: any
+  public settings: CustomizerSettings
 
   @column()
   public model_id: number
@@ -116,8 +125,7 @@ export default class Customizer extends BaseModel {
   })
   public source: HasOne<typeof Source>
 
-  @hasMany(() => Cron, {
-    foreignKey: 'customizer_id',
+  @hasMany(() => Cron, {    foreignKey: 'customizer_id',
     localKey: 'id',
   })
   public crons: HasMany<typeof Cron>
@@ -172,6 +180,7 @@ export default class Customizer extends BaseModel {
     }
     let namespace = data_get(property, 'namespace', 'context')
     let path = data_get(property, 'path')
+
     let JSExpression = data_get(property, 'JSExpression', 'null')
     JSExpression = Customizer.replaceMustache(JSExpression)
     let method = data_get(property, 'method')
@@ -201,7 +210,8 @@ export default class Customizer extends BaseModel {
       case 'this':
       case 'current_user': {
         if (!path) {
-          path = namespace
+          return '""'
+
         } else {
           path = namespace + '.' + path
         }
@@ -355,7 +365,7 @@ export default class Customizer extends BaseModel {
     this.timeout = setTimeout(() => this.callCustomizer(model), this.getTimeInMilliseconds())
   }
 
-  async callCrud(instanceId) {
+  async callCrud(instance) {
     const customizer = this
 
     if (customizer.type !== 'crud') {
@@ -372,7 +382,7 @@ export default class Customizer extends BaseModel {
     if (classCustomizerCRUD) {
       const customizerCRUD = new classCustomizerCRUD
 
-      customizerCRUD.run(instanceId)
+      await customizerCRUD.run(instance)
     }
   }
 
@@ -396,9 +406,12 @@ export default class Customizer extends BaseModel {
 
     const date = this.settings.start_at ? new Date(this.settings.start_at) : new Date()
 
+    // @ts-ignore
     addSchedule(this.id, date, this.settings.period_unit, this.settings.period, async () => {
       if (!this.settings.infinity) {
+        // @ts-ignore
         if (this.settings.repeat_count > 0) {
+          // @ts-ignore
           this.settings.repeat_count--
 
           await this.save()
@@ -497,7 +510,7 @@ export default class Customizer extends BaseModel {
     return this.imports.join('\n')
   }
 
-  private getStartNode(): StartNode | null {
+  public getStartNode(): StartNode | null {
     if(!this.data){
       return null
     }
@@ -549,7 +562,9 @@ export default class Customizer extends BaseModel {
         case 'start': return new StartNode( item , customizer)
         case 'return': return new ReturnNode( item, customizer )
         case 'change': return new ChangeNode( item, customizer )
+        case 'event': return new EventNode( item, customizer )
         case 'validator': return new ValidatorNode( item, customizer )
+        case 'email_template': return new EmailTemplateNode( item, customizer )
         case 'documentAction': return new DocumentNode(item, customizer)
         case 'crudAction': return new CrudNode(item, customizer)
         case 'apiAction': return new ApiNodeV2(item, customizer)
@@ -608,6 +623,14 @@ export default class Customizer extends BaseModel {
         expression = expression.replace(new RegExp(`{{${path}}}`, "g"), replace || "");
       });
     }
+    // @ts-ignore
+    expression = expression.replaceAll('/{/{', '{{')
+    // @ts-ignore
+    expression = expression.replaceAll('/{/{/{', '{{{')
+    // @ts-ignore
+    expression = expression.replaceAll('/}/}', '}}')
+    // @ts-ignore
+    expression = expression.replaceAll('/}/}/}', '}}}')
     return expression
   }
 
@@ -621,4 +644,57 @@ export default class Customizer extends BaseModel {
     return ! ! _.get(this, 'settings.external')
   }
 
+  public static async callCustomEvents(eventName, data){
+    let listenerImports = await  getValue(Customizer.listener_imports)
+    if(! listenerImports){
+      await Customizer.updateCustomEventListeners()
+      listenerImports = await  getValue(Customizer.listener_imports)
+    }
+    if(_.isArray(listenerImports[eventName])){
+      for(const listenerClass of listenerImports[eventName]){
+        const instance = new listenerClass
+        data = (await instance.run(eventName, data)) || data
+      }
+    }
+    return data
+  }
+
+
+  public static async updateCustomEventListeners(){
+    const listeners = await  Customizer.query().where('type', 'listener')
+
+    await clearValue(Customizer.listener_imports)
+    const listenerImports = {}
+
+    for(const l of listeners){
+
+      if(fs.existsSync(path.join(ListenerGenerator.directory, l.name + ListenerGenerator.ext))){
+        if(! l.settings.hook_type){
+          continue
+        }
+        listenerImports[l.settings.hook_type] = listenerImports[l.settings.hook_type] || []
+        listenerImports[l.settings.hook_type].push(require(path.join(ListenerGenerator.directory, l.name + ListenerGenerator.ext)).default)
+      }
+    }
+    await setValue(Customizer.listener_imports, listenerImports)
+    console.log('Customizer Updates Custom Event Listeners!!!')
+  }
+
+}
+
+type CustomizerSettings = {
+  middlewares?: any[];
+  type?: string;
+  start_at?: any;
+  period_unit?: string;
+  period?: string | number;
+  infinity?: Boolean;
+  repeat_count?: string | number;
+  next_run?: DateTime;
+  last_run?: DateTime;
+  time_type?: string;
+  time?: string;
+  hook_type?:string;
+  event_type?:string;
+  event_hook_type?:string;
 }

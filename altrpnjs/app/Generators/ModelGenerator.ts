@@ -10,6 +10,7 @@ import ControllerGenerator from "./ControllerGenerator";
 import isProd from "../../helpers/isProd";
 import ListenerGenerator from "App/Generators/ListenerGenerator";
 import clearRequireCache from "../../helpers/node-js/clearRequireCache";
+import Customizer from "App/Models/Customizer";
 
 export default class ModelGenerator extends BaseGenerator {
 
@@ -89,8 +90,8 @@ export default class ModelGenerator extends BaseGenerator {
         staticProperties: isProd() ? this.getProdStaticPropertiesContent() : '',
         columns: this.getColumnsContent(),
         computed: this.getComputedContent(),
-        relations: this.getRelationsContent(),
-        methods: this.getMethodsContent(),
+        relations: await this.getRelationsContent(),
+        methods: await this.getMethodsContent(),
         constructor: this.getConstructorContent(),
         custom,
         custom_end,
@@ -109,28 +110,13 @@ const Event =__importDefault(global[Symbol.for('ioc.use')]("Adonis/Core/Event"))
 ${this.model.soft_deletes ? `
 const delete_1 = require("../../helpers/delete");
 ` : ''}
-${_.uniqBy(
-  this.altrp_relationships
-      .filter(relationship => relationship?.altrp_target_model?.name),
-      relationship => relationship.altrp_target_model.name
-    ).map(relationship =>
-        `const ${relationship?.altrp_target_model?.name} = require('./${relationship?.altrp_target_model?.name}');`)
-      .join('\n')
-    }
 `
   }
   private _getDevImportsContent(): string {
     return `import * as luxon from 'luxon'
 import * as Orm from '@ioc:Adonis/Lucid/Orm'
 import Event from '@ioc:Adonis/Core/Event'
-${_.uniqBy(
-  this.altrp_relationships
-      .filter(relationship => relationship?.altrp_target_model?.name),
-      relationship => relationship.altrp_target_model.name
-    ).map(relationship =>
-        `import ${relationship?.altrp_target_model?.name} from './${relationship?.altrp_target_model?.name}'`)
-      .join('\n')
-    }
+
 ${this.model.soft_deletes ? `
 import {softDeleteQuery, softDelete} from "../../helpers/delete";
 ` : ''}
@@ -217,6 +203,10 @@ decorate([
     (0, Orm.beforeFetch)(),
     __metadata("design:type", Object)
 ], ${this.model.name}, "softDeletesFetch", void 0);
+decorate([
+    (0, Orm.beforePaginate)(),
+    __metadata("design:type", Object)
+], ${this.model.name}, "softDeletesFetch", void 0);
 ` : ''}
 `
   }
@@ -230,13 +220,49 @@ ${columns.map(column => column.renderForModel()).join('')}
 `
   }
 
-  private getMethodsContent(): string {
+  private async getMethodsContent(): Promise<string> {
+
+    const customizerQuery = Customizer.query()
+
+    customizerQuery.where('model_guid', this.model.guid)
+    customizerQuery.where('type', 'method')
+
+    const methods = await customizerQuery
+
+    let methodsContent = ''
+
+    for(const method of methods){
+      try{
+        const startNode = method.getStartNode()
+
+        if(! startNode){
+          continue
+        }
+        let _static = startNode.isStaticMethod() ? ' static ' : ''
+        let _async = startNode.isAsyncMethod() ? ' async ' : ''
+        let params = startNode.getMethodParams()
+        let methodContent = `
+/**
+ * Automatically generated class method
+ */
+${_static}${_async} ${method.name}(${params.join(', ')}){
+  ${startNode.getJSContent()}
+          }
+`
+        methodsContent +=  methodContent
+      }catch (e) {
+        console.error('Error While Render Method-Customizer', e)
+      }
+    }
     if(this.model.soft_deletes && ! isProd()){
       return `
   @Orm.beforeFind()
   public static softDeletesFind = softDeleteQuery;
 
   @Orm.beforeFetch()
+  public static softDeletesFetch = softDeleteQuery;
+
+  @Orm.beforePaginate()
   public static softDeletesFetch = softDeleteQuery;
 
 
@@ -257,9 +283,9 @@ ${columns.map(column => column.renderForModel()).join('')}
       return false
     }
   }
-      `
+${methodsContent}`
     }
-    return ''
+    return methodsContent
   }
 
   private getComputedContent(): string {
@@ -269,10 +295,13 @@ ${columns.map(column => column.renderForModel()).join('')}
     `
   }
 
-  private getRelationsContent(): string {
-    return `
-${this.altrp_relationships.map(relationship => relationship.renderForModel()).join('')}
-    `
+  private async getRelationsContent(): Promise<string> {
+    let content = ``
+    for(const relation of this.altrp_relationships){
+      content += await relation.renderForModel()
+    }
+
+    return content
   }
 
 

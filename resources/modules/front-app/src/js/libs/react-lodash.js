@@ -1,7 +1,8 @@
 import ReactDom from 'react-dom';
 import React, {Component, Suspense, Fragment,} from 'react';
 import * as reactRedux  from 'react-redux'
-import styled, {createGlobalStyle} from 'styled-components'
+import styled, {createGlobalStyle, css} from 'styled-components'
+import  * as st  from 'styled-components'
 import cloneDeep from 'lodash.clonedeep';
 import get from 'lodash.get';
 import set from 'lodash.set';
@@ -17,6 +18,7 @@ import isEqual from 'lodash.isequal';
 import isFunction from 'lodash.isfunction';
 import isNumber from 'lodash.isnumber';
 import debounce from 'lodash.debounce';
+import throttle from 'lodash.throttle';
 import assign from 'lodash.assign';
 import each from 'lodash.foreach';
 import toPairs from 'lodash.topairs';
@@ -26,11 +28,13 @@ import uniqBy  from 'lodash.uniqby';
 import sortBy  from 'lodash.sortby';
 import map  from 'lodash.map';
 import reverse  from 'lodash.reverse';
+
 window._ = {
   cloneDeep,
   get,
   set,
   sortBy,
+  throttle,
   has,
   unset,
   isEmpty,
@@ -62,6 +66,7 @@ window.Provider = reactRedux.Provider;
 window.reactRedux = reactRedux;
 window.styled = styled;
 window.createGlobalStyle = createGlobalStyle;
+window.css = css;
 if(window.SSR){
   global.ReactDOM = ReactDom;
   global.React = React;

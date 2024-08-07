@@ -225,7 +225,6 @@ class InputDate extends BaseElement {
 
     this.addControl("content_default_value", {
       type: CONTROLLER_TEXTAREA,
-      default: "",
       label: "Default Value",
       locked: true,
     });
@@ -236,6 +235,40 @@ class InputDate extends BaseElement {
     //   description:
     //     "E.g {{altrpforms.form_id.field_id}}*{{altrpforms.form_id.field_id_2}}+10"
     // });
+
+    this.endControlSection();
+
+    this.startControlSection("max_date_settings", {
+      tab: TAB_CONTENT,
+      label: "Max Date Settings",
+    });
+
+    this.addControl("max_date_y", {
+      type: CONTROLLER_NUMBER,
+      label: "Years Difference",
+      description: 'Can Use "-"',
+      dynamic:false,
+
+      locked: true,
+    });
+
+    this.addControl("max_date_m", {
+      type: CONTROLLER_NUMBER,
+      label: "Months Difference",
+      description: 'Can Use "-"',
+      dynamic:false,
+
+      locked: true,
+    });
+
+    this.addControl("max_date_d", {
+      type: CONTROLLER_NUMBER,
+      label: "Days Difference",
+      description: 'Can Use "-"',
+      dynamic:false,
+
+      locked: true,
+    });
 
     this.endControlSection();
 

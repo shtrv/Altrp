@@ -8,12 +8,18 @@
 | preferred, since they keep this file clean.
 |
 */
+declare global {
+  const __;
+  let globalCache:any;
+}
+
 
 import Server from '@ioc:Adonis/Core/Server'
 import Route from "@ioc:Adonis/Core/Route"
 import './view'
 import "../app/Services/TelegramBot"
 import "../app/Services/DiscordBot"
+import __ from "../helpers/i18n/__";
 
 /*
 |--------------------------------------------------------------------------
@@ -24,10 +30,15 @@ import "../app/Services/DiscordBot"
 | are defined for every HTTP requests.
 |
 */
+// @ts-ignore
+global.__ = __;
+// @ts-ignore
+global.globalCache = {};
 Server.middleware.register([
   () => import('@ioc:Adonis/Core/BodyParser'),
-  () => import('App/Middleware/ConvertEmptyString'),
   () => import('App/Middleware/SilentAuth'),
+  () => import('App/Middleware/Logout'),
+  () => import('App/Middleware/ConvertEmptyString'),
   () => import('@ioc:Adonis/Addons/Shield'),
 ])
 

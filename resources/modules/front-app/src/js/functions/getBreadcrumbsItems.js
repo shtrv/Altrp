@@ -9,7 +9,7 @@ export default function getBreadcrumbsItems(){
     return window.breadcrumbsItems;
   }
   let items = [];
-  if(isEditor(0)){
+  if(isEditor()){
     return items;
   }
   const currentId = window['h-altrp'] ? window.page_id : window.currentPageId
@@ -68,6 +68,10 @@ export default function getBreadcrumbsItems(){
       }
 
       const model = models?.[i.path.split('/').length - 1] || {}
+
+      console.log(models)
+      console.log(model)
+      console.log(i.path)
 
       i.title = window.altrpHelpers.replaceContentWithData(i.title, model)
     }

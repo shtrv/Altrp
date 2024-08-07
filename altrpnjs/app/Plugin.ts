@@ -21,14 +21,7 @@ import isProd from "../helpers/isProd";
 import View from "@ioc:Adonis/Core/View";
 import {CacheManager} from "edge.js/build/src/CacheManager";
 import env from "../helpers/env";
-//const crypto = require('crypto');
 
-/* function encryptStringAES(input, key) {
-  const cipher = crypto.createCipheriv('aes-256-cbc', key);
-  let encrypted = cipher.update(input, 'utf8', 'hex');
-  encrypted += cipher.final('hex');
-  return encrypted;
-} */
 
 export default class Plugin {
 
@@ -353,12 +346,12 @@ export default class Plugin {
         })
       await altrp_static_meta.save()
     }
-    let value = JSON.parse(altrp_static_meta.meta_value)
+    let value = altrp_static_meta.meta_value
 
     for (let item of Plugin.STATIC_LOCATIONS_LIST) {
       data_set(value, item + '.' + this.name, null)
     }
-    altrp_static_meta.meta_value = JSON.stringify(value)
+    altrp_static_meta.meta_value = value
     altrp_static_meta.save()
     await Plugin.writePluginsSettings()
   }
@@ -376,7 +369,7 @@ export default class Plugin {
         })
       await altrp_static_meta.save()
     }
-    let value = JSON.parse(altrp_static_meta.meta_value)
+    let value = altrp_static_meta.meta_value
 
     for (let item of Plugin.STATIC_LOCATIONS_LIST) {
       let statics_list: any = data_get(value, item)
@@ -417,25 +410,23 @@ export default class Plugin {
       altrp_static_meta.fill(
         {
           meta_name: Plugin.ALTRP_STATIC_META,
-          meta_value: '{}',
+          meta_value: {},
         })
       await altrp_static_meta.save()
     }
-    let value = JSON.parse(altrp_static_meta.meta_value)
+    let value = altrp_static_meta.meta_value
 
     for (let item of Plugin.STATIC_LOCATIONS_LIST) {
       data_set(value, item + '.' + this.name, this.getMeta(item)
       )
     }
-    altrp_static_meta.meta_value = JSON.stringify(value)
-    altrp_static_meta.save()
+    altrp_static_meta.meta_value = value
+    await altrp_static_meta.save()
     await Plugin.writePluginsSettings()
   }
 
-  static public
 
-
-  public async updatePluginFiles(request: RequestContract): Promise<boolean> {
+  public async updatePluginFiles(request: RequestContract,): Promise<boolean> {
     if (!isValidUrl(this.update_url)) {
       return true
     }
@@ -462,9 +453,10 @@ export default class Plugin {
     let filename = temp_path + '/' + this.name + '.zip'
     fs.writeFileSync(filename, res)
     let archive = new AdmZip(filename)
+    fs.removeSync(this.getPath())
 
     archive.extractAllTo(this.getPath(), true)
-
+    clearRequireCache()
     fs.removeSync(temp_path)
     await this.callUpdateHooks()
     return true

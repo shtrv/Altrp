@@ -1,6 +1,7 @@
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import {ValidationException} from "@ioc:Adonis/Core/Validator";
 import {inspect} from "util";
+import * as _ from "lodash";
 
 /**
  * Auth middleware is meant to restrict un-authenticated access to a given route
@@ -29,13 +30,14 @@ export default class CatchUnhandledJson {
         delete all.password
       }
       if(e instanceof ValidationException){
+        response.status(400)
         // @ts-ignore
         let errors: any[] = e.messages?.errors || []
         let textErrors:string[] = []
-        let mergedErrors = {}
+        let merged_errors = {}
         errors.forEach(e=>{
-          mergedErrors[e.field] = mergedErrors[e.field] || []
-          mergedErrors[e.field].push(e.message)
+          merged_errors[e.field] = merged_errors[e.field] || []
+          merged_errors[e.field].push(e.message)
           textErrors.push( e.message)
         })
 
@@ -44,13 +46,23 @@ export default class CatchUnhandledJson {
 ====== METHOD ${request.method()}
 ====== URL ${request.url()}
 ====== USER_ID: ${auth.user?.id}
+====== USER_IP: ${request.header('X-Real-IP')}
 `) ;
+
+        const error_fields = {}
+
+        // @ts-ignore
+        _.forEach(merged_errors, (errors: [], field)=>{
+          error_fields[field] = errors.join('\n')
+        })
+
         return response.json({
           // @ts-ignore
           messages: e.messages,
+          error_fields,
           // @ts-ignore
           thrownMessage: e.message,
-          mergedErrors,
+          merged_errors,
           textErrors: textErrors.join('\n'),
           success: false,
           // @ts-ignore
@@ -60,19 +72,23 @@ export default class CatchUnhandledJson {
         })
       }
 
-      console.error(e?.request || e, e?.response?.data || '', `
+      console.error(e?.response?.data || e, `
 ====== METHOD ${request.method()}
 ====== URL ${request.url()}
 ====== DATA: ${inspect(all)}
 ====== USER_ID: ${auth.user?.id}
-`) ;
+====== USER_IP: ${request.header('X-Real-IP')}
+====== RESPONSE:
+
+`, e.response||'') ;
       return response.json({
         // ...e,
-        axios_response: e.response,
+        //axios_response: e.response,
         messages: e.messages,
         thrownMessage: e.message,
+        textErrors: e.message,
         success: false,
-        message: e.response?.data?.message || 'Unhandled Exception: ' + e.message,
+        message: e.response?.data?.message || 'Unhandled Exception: ' + (e.message || e),
         trace: e?.stack?.split('\n'),
       })
     }

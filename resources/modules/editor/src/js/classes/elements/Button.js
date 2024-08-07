@@ -129,28 +129,6 @@ class Button extends BaseElement {
       locked: true,
     });
 
-    // this.addControl('button_icon_position', {
-    //   type: CONTROLLER_SELECT,
-    //   label: 'Icon Position',
-    //   options: [
-    //     {
-    //       value: 'row',
-    //       label: 'Right'
-    //     },
-    //     {
-    //       value: 'row-reverse',
-    //       label: 'Left'
-    //     },
-    //     {
-    //       value: 'column',
-    //       label: 'Bottom'
-    //     },
-    //     {
-    //       value: 'column-reverse',
-    //       label: 'Top'
-    //     },
-    //   ],
-    // });
 
     this.endControlSection();
 
@@ -168,7 +146,30 @@ class Button extends BaseElement {
 
     this.endControlSection();
 
-    actionsControllers(this);
+    this.startControlSection('Actions', {
+      label: 'Actions'
+    })
+
+    this.addControl('actions_loader', {
+      label: 'Show Loader',
+      type: CONTROLLER_SWITCHER,
+      locked:true,
+      responsive: false,
+    })
+
+    // this.addControl('actions_loader_duration', {
+    //   label: 'Animation Duration',
+    //   conditions: {
+    //     actions_loader: true
+    //   },
+    //   type: CONTROLLER_SLIDER,
+    //   step: 0.01,
+    //   responsive: false,
+    // })
+
+    actionsControllers(this, 'Actions', '', TAB_CONTENT, false, true);
+
+    this.endControlSection()
 
     actionsControllers(this, 'Hover Actions', 'hover_');
 
@@ -213,6 +214,38 @@ class Button extends BaseElement {
       hideOnEmail: true,
       type: CONTROLLER_NUMBER,
       label: 'Z-index',
+    });
+
+    this.addControl('justify_content', {
+      hideOnEmail: true,
+      type: CONTROLLER_SELECT,
+      options: [
+        {
+          label: 'Default',
+          value: '',
+        },
+        {
+          value: 'start',
+          label: 'Start',
+        },
+        {
+          value: 'center',
+          label: 'Center',
+        },
+        {
+          value: 'end',
+          label: 'End',
+        },
+        {
+          value: 'space-between',
+          label: 'Space Between',
+        },
+        {
+          value: 'space-around',
+          label: 'SpaceAround',
+        },
+      ],
+      label: 'Justify Content',
     });
 
     this.addControl("position_css_id", {
@@ -501,6 +534,81 @@ class Button extends BaseElement {
 
     this.endControlSection();
 
+    this.startControlSection('outline_section', {
+      tab: TAB_STYLE,
+      label: 'Outline'
+    });
+
+    this.addControl('outline_type', {
+        type: CONTROLLER_SELECT,
+        label: 'Outline Type',
+        options: [
+          {
+            'value': 'none',
+            'label': 'None',
+          },
+          {
+            'value': 'solid',
+            'label': 'Solid',
+          },
+          {
+            'value': 'double',
+            'label': 'Double',
+          },
+          {
+            'value': 'dotted',
+            'label': 'Dotted',
+          },
+          {
+            'value': 'dashed',
+            'label': 'Dashed',
+          },
+          {
+            'value': 'groove',
+            'label': 'Groove',
+          },
+        ],
+      }
+    );
+
+    this.addControl('outline_width', {
+        type: CONTROLLER_SLIDER,
+        label: 'Outline Width',
+        default: {
+          bind: true,
+        },
+        units: [
+          'px',
+          '%',
+          'vh',
+          'vw'
+        ],
+      }
+    );
+
+    this.addControl('outline_color', {
+        type: CONTROLLER_COLOR,
+        label: 'Outline Color',
+      }
+    );
+
+    this.addControl('outline_radius', {
+      type: CONTROLLER_DIMENSIONS,
+      label: 'Outline Radius',
+      default: {
+        unit: 'px',
+        bind: true,
+      },
+      units: [
+        'px',
+        '%',
+        'vh',
+        'vw'
+      ],
+    });
+
+    this.endControlSection();
+
     this.startControlSection('font_section', {
       tab: TAB_STYLE,
       label: 'Font',
@@ -547,7 +655,7 @@ class Button extends BaseElement {
     this.startControlSection("icon_style", {
       hideOnEmail: true,
       tab: TAB_STYLE,
-      label: "Icon"
+      label: "Icons"
     });
 
     this.addControl('icon_padding_right', {

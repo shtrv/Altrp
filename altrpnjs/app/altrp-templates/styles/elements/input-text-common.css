@@ -177,7 +177,7 @@
 }
 .altrp-field {
   overflow: hidden;
-  cursor: pointer;
+  cursor: text;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -390,6 +390,7 @@ textarea.altrp-field {
 .altrp-field-label-container {
   display: inline-flex;
   align-items: center;
+  flex-shrink: 0;
 }
 .altrp-field-select2__indicator.altrp-field-select2__dropdown-indicator {
   padding: 0 8px;
@@ -406,4 +407,11 @@ textarea.altrp-field {
 }
 .altrp-field-select2 .altrp-field-select2__control {
   min-height: 14px;
+}
+.mask-mismatch-message{
+  position: absolute;
+  margin-bottom: 0;
+  bottom: 0;
+  color: red;
+
 }
