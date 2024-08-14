@@ -84,7 +84,7 @@ class AltrpCarousel extends Component {
     }
     if(getResponsiveSetting(this.props, 'slides_item_source', '', 'custom') === 'path'){
 
-      let sliderImages = getDataByPath(getResponsiveSetting(this.props, 'slides_path'));
+      let sliderImages = getDataByPath(getResponsiveSetting(this.props, 'slides_path'), null, (this.props.elementSettings.hasCardModel() ? this.props.elementSettings.getCardModel() : null));
       if(! _.isArray(sliderImages) && _.isObject(sliderImages)){
         sliderImages = [sliderImages];
       } else if(! _.isArray(sliderImages)){
@@ -243,7 +243,7 @@ class AltrpCarousel extends Component {
       maxView = maxView * rows
     }
 
-    if(maxView >= slides.length) {
+    if(maxView > slides.length) {
       infinite = false
     }
 
@@ -436,7 +436,7 @@ class AltrpCarousel extends Component {
             ];
           }
         } else {
-          slidesMap = getDataByPath(getResponsiveSetting(this.props, 'slides_path'));
+          slidesMap = getDataByPath(getResponsiveSetting(this.props, 'slides_path'), null, (this.props.elementSettings.hasCardModel() ? this.props.elementSettings.getCardModel() : null));
           if(! _.isArray(slidesMap) && _.isObject(slidesMap)){
             slidesMap = [slidesMap];
           } else if(! _.isArray(slidesMap)){
@@ -534,13 +534,13 @@ class AltrpCarousel extends Component {
     const slides_repeater = getResponsiveSetting(this.props, 'slides_repeater')
     const color_lightbox_style = getResponsiveSetting(this.props, 'color_lightbox_style')
 
-    prevArrow = arrows_navigation_content ? (
+    prevArrow = (slidesMap.length > 1 && arrows_navigation_content) ? (
         <div className={`${classes} altrp-carousel-arrow-prev altrp-carousel-arrow`} onClick={this.previous}>
           <ArrowIcon/>
         </div>
       ) : "";
 
-    nextArrow = arrows_navigation_content ? (
+    nextArrow = (slidesMap.length > 1 && arrows_navigation_content) ? (
       <div className={`${classes} altrp-carousel-arrow-next altrp-carousel-arrow`} onClick={this.next}>
         <ArrowIcon/>
       </div>
