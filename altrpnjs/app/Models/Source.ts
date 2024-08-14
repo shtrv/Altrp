@@ -527,7 +527,7 @@ export default class Source extends BaseModel {
       .select('*')
 
     for (const pageDatasource of pageDatasources) {
-      const newHttpContext: HttpContextContract = _.cloneDeep(httpContext)
+      /* const newHttpContext: HttpContextContract = _.cloneDeep(httpContext)
       if (httpContext.auth) {
         Object.defineProperty(newHttpContext, 'auth', {
           get: function () {
@@ -539,7 +539,19 @@ export default class Source extends BaseModel {
             return httpContext.session;
           },
         });
-      }
+      } */
+      const newHttpContext = {
+        params: httpContext.params,
+        auth: {
+            user: httpContext.auth.user
+        },
+        request: httpContext.request,
+        response: httpContext.response,
+        logger: httpContext.logger,
+        profiler: httpContext.profiler,
+        route: httpContext.route,
+        routeKey: httpContext.routeKey,
+      };
 
       const data = await pageDatasource.fetchControllerMethod(newHttpContext, altrpContext)
       if (data?.data) {
