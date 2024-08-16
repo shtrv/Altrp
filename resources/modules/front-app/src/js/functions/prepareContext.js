@@ -10,5 +10,6 @@ export default function prepareContext(context) {
   context.altrppagestate = appStore.getState().altrpPageState.getData();
   context.altrpresponses = appStore.getState().altrpresponses.getData();
   context.altrpmeta = appStore.getState().altrpMeta.getData();
+  context.altrppage = appStore.getState().altrpPage.getData();
   return context;
 }
