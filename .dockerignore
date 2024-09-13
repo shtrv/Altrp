@@ -1,0 +1,42 @@
+# Игнорируем node_modules
+node_modules
+
+# Игнорируем локальные окружения
+.env
+*.env
+
+# Игнорируем логи
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# Игнорируем локальные файлы конфигурации и кэш
+*.swp
+*~
+.idea
+.vscode
+.DS_Store
+.cache
+
+# Игнорируем тестовые файлы и директории
+coverage
+tests
+test
+__tests__
+
+# Игнорируем временные файлы и сборки
+tmp
+temp
+*.tmp
+*.temp
+dist
+build
+
+# Игнорируем файлы Docker
+Dockerfile*
+.dockerignore
+docker-compose.yml
+
+# Игнорируем файлы исходного контроля версий
+.git
+.gitignore
