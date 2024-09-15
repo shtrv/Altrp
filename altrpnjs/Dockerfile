@@ -1,27 +1,15 @@
-FROM node:18.20.4 AS builder
-
-WORKDIR /app
-
-COPY . .
-
-RUN npm install --legacy-peer-deps
-RUN cd altrpnjs && npm install
-RUN npm run build-pack-js-server
-
 FROM node:18.20.4
-WORKDIR /altrp
-COPY --from=builder /app/altrpnjs/build/ /altrp
-COPY ./start.sh /altrp
+WORKDIR /altrpnjs
+COPY . .
 
 RUN npm install 
 RUN APP_KEY=$(node ace generate:key) && \
     echo "APP_KEY=$APP_KEY" >> .env
 
-#ENV APP_ENV=development
-ENV APP_ENV=production
+ENV APP_ENV=development
 ENV APP_URL=http://127.0.0.1
-ENV NODE_ENV=production
-ENV PATH_ENV=production
+ENV NODE_ENV=development
+ENV PATH_ENV=development
 ENV APP_KEY=$APP_KEY
 ENV HOST=0.0.0.0
 ENV APP_NAME=localhost
@@ -42,5 +30,9 @@ ENV QUEUE_CONNECTION=sync
 ENV SESSION_DRIVER=cookie
 ENV SESSION_LIFETIME=7200
 
+# RUN node ace migration:run --force \
+    # && node ace db:seed name=admin email=maior.andrey@gmail.com password=12345678
+
+# CMD ["node" "ace" "serve" "--watch"]
 EXPOSE 33331
-CMD ["/bin/sh", "/altrp/start.sh"]
+CMD ["/altrpnjs/start.sh"]

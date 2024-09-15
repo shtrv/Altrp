@@ -1,0 +1,33 @@
+services:
+  # altrpnjs:
+  #   build: ./altrpnjs
+  #   container_name: altrpnjs
+  #   ports:
+  #     - "33331:33331"
+  #     - "3000:3000"
+  #   environment:
+  #     - PG_DB_HOST=postgres
+  #   depends_on:
+  #     - postgres
+
+  altrpbuild:
+    build: .
+    container_name: altrp
+    ports:
+      - "33331:33331"
+      - "3000:3000"
+    environment:
+      - PG_DB_HOST=postgres
+    depends_on:
+      - postgres
+
+  postgres:
+    #image: postgres:latest
+    build: ./altrpnjs/database
+    container_name: postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=altrp
+    ports:
+      - "5432:5432"
